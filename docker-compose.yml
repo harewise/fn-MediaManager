@@ -3,7 +3,7 @@
 #   echo 'TMDB_API_KEY=你的key' > .env
 services:
   tmdb-provider:
-    image: ghcr.io/OWNER/REPO:latest   # ← 换成你的 ghcr.io/<用户名>/<仓库名>（小写）
+    image: ghcr.io/harewise/fn-mediamanager:latest   # GitHub Actions 自动构建（仓库名自动转小写）
     container_name: tmdb-provider
     restart: unless-stopped
     user: "1000:1001"                  # 写缓存目录的宿主机用户:组（fnOS admin:Users），按需调整

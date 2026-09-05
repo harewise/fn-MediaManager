@@ -32,7 +32,7 @@ Docker 镜像由 GitHub Actions 自动构建并发布到 ghcr.io。
 
 ## 快速开始（Docker Compose，推荐）
 
-> 镜像地址：`ghcr.io/<你的GitHub用户名>/<仓库名>:latest`，push 到 main 分支后 Actions 自动构建。
+> 镜像地址：`ghcr.io/harewise/fn-mediamanager:latest`，push 到 main 分支后 Actions 自动构建（仓库名自动转小写）。
 
 **0. 前置**：[themoviedb.org](https://www.themoviedb.org/settings/api) 免费申请 API Key。
 
@@ -42,15 +42,14 @@ Docker 镜像由 GitHub Actions 自动构建并发布到 ghcr.io。
 # GitHub Actions 自动构建：本仓库 push 到 main 即产出 latest；打 v* tag 产出版本号 tag。
 # 注意：首次构建后，到仓库 Packages 页把镜像可见性改为 Public，NAS 才能免登录拉取；
 # 保持 Private 则 NAS 上需先 docker login ghcr.io（PAT 即可）。
-docker pull ghcr.io/<用户名>/<仓库名>:latest
+docker pull ghcr.io/harewise/fn-mediamanager:latest
 ```
 
-**2. 部署**：
+**2. 部署**（NAS 上运行只需要 docker-compose.yml + .env 两个文件，镜像从 ghcr 拉取）：
 
 ```bash
-git clone https://github.com/<用户名>/<仓库名>.git && cd <仓库名>
+git clone https://github.com/harewise/fn-MediaManager.git && cd fn-MediaManager
 echo 'TMDB_API_KEY=你的key' > .env          # 私有信息只放 .env（已被 .gitignore 排除）
-# 编辑 docker-compose.yml，把 image 换成你的 ghcr 地址
 docker compose up -d
 
 curl -s http://127.0.0.1:38080/healthz      # {"code":0,...} 即正常
