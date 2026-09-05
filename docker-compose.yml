@@ -1,6 +1,7 @@
 # 部署步骤见 README「快速开始」。
 # 私有信息只放在同目录 .env 文件里（已被 .gitignore 排除）：
 #   echo 'TMDB_API_KEY=你的key' > .env
+name: fn-mediamanager
 services:
   tmdb-provider:
     image: ghcr.io/harewise/fn-mediamanager:latest   # GitHub Actions 自动构建（仓库名自动转小写）
