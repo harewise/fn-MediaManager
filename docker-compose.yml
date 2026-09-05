@@ -1,0 +1,26 @@
+# 部署步骤见 README「快速开始」。
+# 私有信息只放在同目录 .env 文件里（已被 .gitignore 排除）：
+#   echo 'TMDB_API_KEY=你的key' > .env
+services:
+  tmdb-provider:
+    image: ghcr.io/OWNER/REPO:latest   # ← 换成你的 ghcr.io/<用户名>/<仓库名>（小写）
+    container_name: tmdb-provider
+    restart: unless-stopped
+    user: "1000:1001"                  # 写缓存目录的宿主机用户:组（fnOS admin:Users），按需调整
+    environment:
+      TZ: Asia/Shanghai
+      TMDB_API_KEY: ${TMDB_API_KEY:?请先在同目录 .env 里配置 TMDB_API_KEY}
+      TMDB_BIND: 0.0.0.0
+      TMDB_LOG_FILE: /app/logs/requests_tmdb.log
+    ports:
+      - "127.0.0.1:38080:38080"        # 只绑宿主机回环，trim-media 在本机访问，局域网不可达
+    volumes:
+      - ./cache:/app/cache                                   # 运行缓存（剧集组/图片），可再生的
+      - ./logs:/app/logs                                     # 请求日志
+      - /vol1/@appmeta/trim.media/img:/vol1/@appmeta/trim.media/img:ro   # 飞牛图片缓存回退（fnOS 路径，其他环境删掉这行即可）
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:38080/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

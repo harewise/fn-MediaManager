@@ -1,0 +1,9 @@
+{
+  "api_key": "到 themoviedb.org 免费申请；Docker 部署建议改用环境变量 TMDB_API_KEY",
+  "tmdb_base": "https://api.tmdb.org/3",
+  "img_base": "https://image.tmdb.org/t/p",
+  "img_original_size": false,
+  "port": 38080,
+  "bind": "127.0.0.1",
+  "log_file": "/path/to/logs/requests_tmdb.log"
+}

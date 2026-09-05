@@ -1,0 +1,16 @@
+# ===== 私有信息与运行数据，绝不入库 =====
+
+# 真实配置（含 TMDB api_key），仓库里只有 tmdb_config.example.json
+tmdb_config.json
+.env
+
+# 运行数据（含媒体库路径等隐私）
+cache/
+logs/
+__pycache__/
+*.pyc
+
+# 本机专属：备份与系统脚本（路径硬编码，不适合公开）
+backup/
+systemd/
+trim_source_watchdog.sh
