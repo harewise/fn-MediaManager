@@ -32,15 +32,16 @@ Docker 镜像由 GitHub Actions 自动构建并发布到 ghcr.io。
 
 ## 快速开始（Docker Compose，推荐）
 
-> 镜像地址：`ghcr.io/harewise/fn-mediamanager:latest`，push 到 main 分支后 Actions 自动构建（仓库名自动转小写）。
+> 镜像地址：`ghcr.io/harewise/fn-mediamanager:latest`，**发布 Release 时自动构建**（仓库名自动转小写）。
 
 **0. 前置**：[themoviedb.org](https://www.themoviedb.org/settings/api) 免费申请 API Key。
 
-**1. 获取镜像**（两种任选）：
+**1. 获取镜像**：
 
 ```bash
-# GitHub Actions 自动构建：本仓库 push 到 main 即产出 latest；打 v* tag 产出版本号 tag。
-# 注意：首次构建后，到仓库 Packages 页把镜像可见性改为 Public，NAS 才能免登录拉取；
+# 日常 push 不触发构建；发布 Release（tag 形如 v1.0.0）才自动构建，
+# 产出镜像 tag：1.0.0 / 1.0 / latest。手动重建：仓库 Actions 页 → Run workflow（刷新 latest）。
+# 首次构建后，到仓库 Packages 页把镜像可见性改为 Public，NAS 才能免登录拉取；
 # 保持 Private 则 NAS 上需先 docker login ghcr.io（PAT 即可）。
 docker pull ghcr.io/harewise/fn-mediamanager:latest
 ```

@@ -1,10 +1,10 @@
 name: build-image
 
-# push 到默认分支 → 构建 latest；推 v* 标签 → 构建版本号 tag
+# 仅在「发布 Release」时构建：镜像 tag 取 Release 的版本号（v1.0.0 → 1.0.0 / 1.0 / latest）。
+# 日常 push 不构建；需要手动重建时到 Actions 页 Run workflow（会刷新 latest）。
 on:
-  push:
-    branches: [main, master]
-    tags: ["v*"]
+  release:
+    types: [published]
   workflow_dispatch:
 
 env:
@@ -37,9 +37,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ !github.event.release.prerelease }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
