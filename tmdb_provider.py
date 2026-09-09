@@ -138,6 +138,7 @@ STATE = {
     "log_file": None,
     "counter": 0,
     "tv_cache": {},      # tv_id -> tv detail dict
+    "movie_cache": {},   # movie_id -> movie detail dict（与 tv_cache 分开：TMDB 电影/剧集 id 空间重叠）
     "group_cache": {},   # tv_id -> 扁平化剧集组 episodes
     "group_ts": {},      # tv_id -> 剧集组拉取时间戳（TTL 判定，持久化）
     "group_refetch_at": {},  # tv_id -> 上次占位强刷时间（限频用，不持久化）
@@ -297,6 +298,13 @@ def search_tv(query: str):
     return d.get("results") or []
 
 
+def search_movie(query: str):
+    d = tmdb_get("/search/movie", query=query, page=1)
+    if not tmdb_ok(d):
+        return []
+    return d.get("results") or []
+
+
 def tv_detail(tv_id: int) -> dict:
     key = tv_id
     with _cache_lock:
@@ -306,6 +314,19 @@ def tv_detail(tv_id: int) -> dict:
     if tmdb_ok(d):
         with _cache_lock:
             STATE["tv_cache"][key] = d
+        return d
+    return {}
+
+
+def movie_detail(mid: int) -> dict:
+    key = mid
+    with _cache_lock:
+        if key in STATE["movie_cache"]:
+            return STATE["movie_cache"][key]
+    d = tmdb_get(f"/movie/{mid}")
+    if tmdb_ok(d):
+        with _cache_lock:
+            STATE["movie_cache"][key] = d
         return d
     return {}
 
@@ -522,6 +543,10 @@ def clean_title(s: str, year: int = 0, season: int = 0) -> str:
     t = re.sub(r"[Ss]\d+[Ee]?\d*", "", t)
     t = re.sub(r"第[一二三四五六七八九十\d]+季.*", "", t)
     t = re.sub(r"Season\s*\d+", "", t, flags=re.I)
+    # 季文件夹名不是片名（"Specials" 曾被当成剧名搜出无关剧集）
+    t = re.sub(r"(?i)^(specials?|ova|oad|extras|trailers?|others?|ncop|nced|menu)s?$", "", t.strip())
+    # 清晰度/片源标签不是片名一部分（"让子弹飞 1080p" 搜不到）
+    t = re.sub(r"(?i)(^|\s)(1080p|720p|2160p|4k|uhd|bluray|blu-ray|web-?dl|webrip|hdtv|remux|h\.?26[45]|x26[45]|hdr10?\+?)(\s|$)", " ", t)
     t = re.sub(r"\s+", " ", t).strip(" -_.")
     return t
 
@@ -544,6 +569,30 @@ def pick_tv(results, query, year):
         if score > best_score:
             best, best_score = r, score
     return best
+
+
+def pick_movie(results, query, year):
+    """电影候选择优：评分逻辑与 pick_tv 一致，字段对齐 title/original_title/release_date。
+    返回 (原始候选, 得分)，调用方按得分设阈值，避免垃圾文件名匹配到不相干电影。"""
+    best, best_score = None, -1
+    q = re.sub(r"\s+", "", query).lower()
+    for r in results:
+        name = (r.get("title") or "") + " " + (r.get("original_title") or "")
+        n = re.sub(r"\s+", "", name).lower()
+        score = 0
+        if q and q in n:
+            score += 10
+        elif n and n in q:
+            # 短标题几乎总能被垃圾/带后缀的文件名"包含"（如《无职转生》总集篇
+            # 抢走"无职转生 特别篇"文件），反向包含要求标题足够长才足为凭
+            score += 8 if len(n) >= 6 else 0
+        else:
+            score += int(6 * len(set(q) & set(n)) / max(len(set(q)), 1))
+        if year and (r.get("release_date") or "").startswith(str(year)):
+            score += 3
+        if score > best_score:
+            best, best_score = r, score
+    return best, best_score
 
 
 # --------------------------------------------------------------------------
@@ -624,6 +673,54 @@ def build_tv(tv: dict) -> dict:
     return data
 
 
+def build_movie(m: dict) -> dict:
+    """构建 movie 详情对象：信封字段与 build_tv 同构，条目字段按 TMDB 电影命名
+    （title/original_title/release_date/runtime），同时给 name/original_name 别名，
+    兼容飞牛可能按剧集结构读字段。"""
+    title = m.get("title") or m.get("original_title") or ""
+    poster = m.get("poster_path") or ""
+    back = m.get("backdrop_path") or ""
+    genres = [{"id": g.get("id"), "name": g.get("name")} for g in m.get("genres") or []]
+    data = {
+        "trim_id": f"tm{m.get('id')}",
+        "id": m.get("id"),
+        "imdb_id": m.get("imdb_id") or "",
+        "pinYin": {},
+        "release_date": m.get("release_date") or "",
+        "genres": genres[:12],
+        "name": title,
+        "title": title,
+        "original_name": m.get("original_title") or title,
+        "original_title": m.get("original_title") or title,
+        "overview": m.get("overview") or "",
+        "poster_path": img_path(poster),
+        "production_countries": [
+            {"iso_3166_1": c.get("iso_3166_1"), "name": c.get("name")}
+            for c in m.get("production_countries") or []],
+        "runtime": int(m.get("runtime") or 0),
+        "status": m.get("status") or "",
+        "tagline": m.get("tagline") or "",
+        "vote_average": m.get("vote_average") or 0,
+        "vote_count": m.get("vote_count") or 0,
+        "alternative_titles": {"titles": []},
+        "content_ratings": {"results": None},
+        "images": {
+            "backdrops": [{"file_path": img_path(back, "backdrop")}] if back else [],
+            "logos": None,
+            "posters": [{"file_path": img_path(poster)}] if poster else [],
+        },
+        "keywords": {"keywords": None},
+        "adult": bool(m.get("adult")),
+    }
+    return data
+
+
+def build_movie_out(mid: int, m: dict) -> dict:
+    out = build_movie(m)
+    out["data_version"] = data_version(out)
+    return out
+
+
 # --------------------------------------------------------------------------
 # 各接口处理
 # --------------------------------------------------------------------------
@@ -650,14 +747,37 @@ def handle_search_item(body: dict):
     if not subj:
         results2 = search_tv(clean_title(info["grand"], info["year"], 0) or query)
         subj = pick_tv(results2, query, info["year"])
+
+    # 没有集号（电影/SP）：电影文件所在分类目录（电影/Movies）的 parent/grand
+    # 是分类名不是片名，靠它搜出的剧集是噪声（"上海正午"曾被 parent"电影"搜出的
+    # 无关剧集顶掉）——先按 stem 搜电影，命中达标就归电影；否则用剧集结果
+    # （SP 文件 parent 即剧名），最后才用文件夹名搜电影兜底。飞牛对电影文件会
+    # 先打 /search/byThirdPartyHash，404 后退回本接口（日志实测）。
+    if req_episode <= 0:
+        q_stem = clean_title(info["stem"], info["year"], 0)
+        m_stem, s_stem = pick_movie(search_movie(q_stem), q_stem, info["year"]) if q_stem else (None, -1)
+        if s_stem < _MOVIE_MIN_SCORE:
+            m_stem = None
+        is_movie = nfo.get("type") == "Movie" or m_stem is not None
+        if is_movie:
+            m = m_stem or _match_movie(info)[0]
+            if m:
+                log_line(f"[search] {query}: 电影命中 tm{int(m['id'])}")
+                return ok({"cleanData": build_clean_data(int(m["id"])), "episode": None})
+            if nfo.get("type") == "Movie":
+                return fail(404, "not found")   # 明确是电影，别塞给剧集
+        if subj:
+            return ok({"cleanData": build_clean_data(int(subj["id"])), "episode": None})
+        m = _match_movie(info)[0]
+        if m:
+            log_line(f"[search] {query}: 电影命中 tm{int(m['id'])}")
+            return ok({"cleanData": build_clean_data(int(m["id"])), "episode": None})
+        return fail(404, "not found")
+
     if not subj:
         return fail(404, "not found")
     tv_id = int(subj["id"])
     trim = f"tm{tv_id}"
-
-    # 没有集号（电影/SP）→ 直接返回 TV 信息
-    if req_episode <= 0:
-        return ok({"cleanData": build_clean_data(tv_id), "episode": None})
 
     # 规则1：TMDB 主表（剧集主页的季结构，最权威、新季最全，如无职转生 Season 3）
     ep = episode_default(tv_id, req_season, req_episode)
@@ -677,6 +797,48 @@ def handle_search_item(body: dict):
         return ok({"cleanData": build_clean_data(tv_id), "episode": episode})
 
     return fail(404, "not found")
+
+
+_MOVIE_MIN_SCORE = 8   # 只接受"标题包含/被包含"级别的匹配，拦截垃圾文件名的胡乱命中
+
+
+def _match_movie(info: dict):
+    """按文件名搜电影：stem（文件名）优先，parent/grand（所在文件夹名）兜底。
+    文件夹名常是存储层噪音（"电影"、"vol02"、"1000-1-hash"），兜底查询
+    须 ≥4 字且含非 ASCII 字符才当片名搜，否则会命中 VOL.02 之类同名噪声。
+    返回 (TMDB电影候选, 得分) 或 (None, -1)。"""
+    for i, src in enumerate((info["stem"], info["parent"], info["grand"])):
+        query = clean_title(src, info["year"], 0)
+        if not query:
+            continue
+        if i and (len(re.sub(r"\s+", "", query)) < 4 or not re.search(r"[^\x00-\x7f]", query)):
+            continue
+        m, score = pick_movie(search_movie(query), query, info["year"])
+        if m and score >= _MOVIE_MIN_SCORE:
+            return m, score
+    return None, -1
+
+
+def handle_search_by_hash(body: dict):
+    """电影文件识别入口（/search/by 同处理）：飞牛对电影先打本接口再退回
+    /search/item。TMDB 没有 hash 体系，thirdPartyHash 仅透传不参与匹配，
+    退化为文件名搜索电影；响应信封与 /search/item 一致（电影无集 → episode null）。"""
+    info = parse_filename(body.get("fileName") or "")
+    m, score = _match_movie(info)
+    if not m:
+        return fail(404, "not found")
+    log_line(f"[search] {clean_title(info['stem'], info['year']) or info['stem']}: 电影(hash)命中 tm{int(m['id'])} score={score}")
+    return ok({"cleanData": build_clean_data(int(m["id"])), "episode": None})
+
+
+def handle_detail_movie(body: dict):
+    mid = _parse_tm_id(body.get("sourceId") or "")
+    if not mid:
+        return fail(404, "not found")
+    m = movie_detail(mid)
+    if not m:
+        return fail(404, "not found")
+    return ok({"cleanData": build_clean_data(mid), "movie": build_movie_out(mid, m)})
 
 
 def season_poster_rel(tv_id: int, tv: dict, season: int) -> str:
@@ -899,6 +1061,21 @@ def handle_search_multi(body: dict):
             "firstAirDate": r.get("first_air_date") or "",
             "lastAirDate": "",
             "numberOfSeasons": counts[i] if i < len(counts) else 0,
+        })
+    # 电影候选追加在剧集之后：手动搜索电影名时也能选中（type=movie，
+    # 上映日复用 firstAirDate 字段装；电影无季，numberOfSeasons=0）
+    for r in search_movie(keyword)[:10]:
+        out.append({
+            "source": "trim_id",
+            "sourceId": f"tm{r.get('id')}",
+            "type": "movie",
+            "name": r.get("title") or "",
+            "posterPath": img_path(r.get("poster_path")),
+            "genres": [],
+            "productionCountries": [],
+            "firstAirDate": r.get("release_date") or "",
+            "lastAirDate": "",
+            "numberOfSeasons": 0,
         })
     return ok({"list": out})
 
@@ -1255,6 +1432,16 @@ def handle_meta_diff(body: dict):
         tv_data = {k: v for k, v in out.items() if k != "data_version"}
         return ok({"hasDiff": True, "tv": tv_data})
 
+    if cat == "movie":
+        # 电影差量：此前落到单集分支恒 hasDiff:false，存量电影元数据被冻结
+        m = movie_detail(tv_id)
+        if not m:
+            return ok({"hasDiff": False})
+        out = build_movie_out(tv_id, m)
+        if out.get("data_version") == cur_ver:
+            return ok({"hasDiff": False})
+        return ok({"hasDiff": True, "movie": {k: v for k, v in out.items() if k != "data_version"}})
+
     if cat == "season":
         season = _season_from_body_or_ctx(tv_id, body)  # 缺 seasonNumber ≠ S1，同上按上下文兜底
         tv = tv_detail(tv_id)
@@ -1458,8 +1645,12 @@ class Handler(BaseHTTPRequestHandler):
                 out = handle_search_item(req_body)
             elif path == "/search/multi":
                 out = handle_search_multi(req_body)
+            elif path in ("/search/byThirdPartyHash", "/search/by"):
+                out = handle_search_by_hash(req_body)
             elif path == "/detail/tv":
                 out = handle_detail_tv(req_body)
+            elif path == "/detail/movie":
+                out = handle_detail_movie(req_body)
             elif path == "/detail/tv/season":
                 out = handle_detail_season(req_body)
             elif path == "/detail/tv/season/episode":

@@ -102,6 +102,8 @@ curl -s -X POST http://127.0.0.1:38080/meta/diff \
 ## 已知行为与限制
 
 - TMDB 没播出的集本身就是占位数据（标题"第 N 集"、无截图），播出后缓存会在 TTL 内自动纠正。
+- 电影：`/search/byThirdPartyHash` 按文件名匹配 TMDB 电影（hash 不参与匹配，TMDB 无此体系）、
+  `/detail/movie` 详情、`/meta/diff` 电影差量均已支持；手动搜索候选含电影。
 - 人物详情（`/detail/person`）未实现，返回空数据。
 - `GET /match` 返回 404 与飞牛原服务行为一致，**不是故障**。
 - 相似图聚类依赖 ffmpeg，缺失时仅去重功能退化，其余不受影响。
