@@ -6,14 +6,19 @@ TMDB 数据源服务（剧集组匹配版）
 监听 127.0.0.1:38080，对外提供与 mediasvc.fnnas.com 相同的接口格式，
 数据来源：api.tmdb.org（TMDB v3，中文 zh-CN，API key 在 tmdb_config.json）。
 
-匹配规则（用户要求）：
-  1. 先按【默认集数】对比：文件解析出的 (season, episode) 直接用
-     /tv/{id}/season/{s}/episode/{e} 查询；命中且一致 → 用默认数据。
-  2. 【不一致】时再从【剧集组】对比：取该剧的 Episode Groups（如
-     “Seasons / Absolute Order / 剧集” 等），在组内按全局 episode_number
-     匹配文件集号（如 Re:Zero S02E39 → 组内全局 39），返回 TMDB 官方数据，
-     season_number 按组名（Season 2 → 2），episode_number 用全局号，
-     保证“文件结构与刮削结果”一致。
+匹配规则：
+  1. 【主表优先】文件解析出的 (season, episode) 先按 TMDB 主表
+     /tv/{id}/season/{s}/episode/{e} 查询——最权威、新季最全
+     （如无职转生 Season 3 只在主表，剧集组长期未收录）。
+  2. 【剧集组兜底】主表无此集（整季拆分/全局集号的旧结构，如
+     Re:Zero S1=85 集、文件 S04E78 用全局号）时，在主剧集组内按
+     全局 episode_number / 季内号换算匹配，season_number 按组名；
+     组内没有该季时不做跨季全局号兜底（避免 S3E11→S1E11 错配）。
+  季/集结构（季数、季集列表）与单集匹配同源：剧集组比主表认识更多编号季时
+  （主表把多季塞在一个编号季里用全局号，如 Re:Zero S1=85 集、我独自升级
+  两季合一）按剧集组出结构，保证季行与文件命名一致；其余一律主表优先
+  （最权威最新，包括真单季番如 Silent Witch，不再让剧集组的脏数据干扰）。
+  任一侧缺的季由另一侧补齐。
 
 用法：
   python3 tmdb_provider.py --config tmdb_config.json
@@ -156,6 +161,38 @@ IMG_CACHE_KEEP = 300 * 1024 * 1024  # 清理到该大小为止
 IMG_CACHE_CHECK_EVERY = 24 * 3600    # 清理检查间隔（秒）
 
 _cache_lock = threading.Lock()
+
+# 刮削会话上下文：飞牛请求体里 season 是 Go int + omitempty，第 0 季（特别篇）
+# 会被整个省略（实测 /detail/tv/season 只剩 {"sourceId","language","source",
+# "isRescrap"}）。缺 season 字段 ≠ 第 1 季，按该剧最近一次 /search/item 命中的
+# 季兜底；TTL 防止很久以前的搜索残留污染后续无季请求。
+_scrape_season_ctx = {}    # tv_id -> (season, ts)
+_SEASON_CTX_TTL = 600      # 秒
+
+
+def _season_ctx_record(tv_id: int, season: int):
+    with _cache_lock:
+        _scrape_season_ctx[tv_id] = (int(season), time.time())
+
+
+def _season_ctx_lookup(tv_id: int):
+    with _cache_lock:
+        hit = _scrape_season_ctx.get(tv_id)
+    if hit and time.time() - hit[1] <= _SEASON_CTX_TTL:
+        return int(hit[0])
+    return None
+
+
+def _season_from_body_or_ctx(tv_id: int, body: dict) -> int:
+    """季号解析：显式字段（含 0）为准；缺席时回退刮削上下文，仍无则 1。
+    字段名两套：/detail/tv/season* 用 season，meta diff 用 seasonNumber。"""
+    s_raw = body.get("season")
+    if s_raw is None:
+        s_raw = body.get("seasonNumber")
+    if s_raw is not None:
+        return int(s_raw)
+    ctx = _season_ctx_lookup(tv_id)
+    return ctx if ctx is not None else 1
 
 
 def log_line(s: str):
@@ -409,23 +446,27 @@ def _group_refetch(tv_id: int) -> bool:
 
 def _match_episode_in_group(tv_id: int, season: int, ep: int):
     """在主剧集组中匹配：先按全局号直接找，找不到按季内号换算（季起始号+ep-1）。
+    主组里没有这一季时返回 None（由调用方退回默认主表结构）：
+    跨季全局号兜底只对"组内已有的季"生效，否则组未收录新播季时会把
+    S3E11 按全局 11 错配成 S1E11（无职转生 Season 3 实测）。
     返回 (ep_dict, group_name, season_num) 或 (None, "", season)。"""
     flat = main_group_flat(tv_id)
     rng = season_range_of(flat, season)
-    if rng:
-        start, end, items = rng
-        # 1) 全局号直接命中（文件 ep 落在本季范围内）
-        if start <= ep <= end:
-            for e in items:
-                if int(e.get("episode_number") or 0) == ep:
-                    return e, e.get("_group", ""), season
-        # 2) 季内号换算：ep 小于季起始号 → 视为季内号
-        if ep < start:
-            target = start + ep - 1
-            for e in items:
-                if int(e.get("episode_number") or 0) == target:
-                    return e, e.get("_group", ""), season
-    # 3) 兜底：按全局号跨季找
+    if not rng:
+        return None, "", season
+    start, end, items = rng
+    # 1) 全局号直接命中（文件 ep 落在本季范围内）
+    if start <= ep <= end:
+        for e in items:
+            if int(e.get("episode_number") or 0) == ep:
+                return e, e.get("_group", ""), season
+    # 2) 季内号换算：ep 小于季起始号 → 视为季内号
+    if ep < start:
+        target = start + ep - 1
+        for e in items:
+            if int(e.get("episode_number") or 0) == target:
+                return e, e.get("_group", ""), season
+    # 3) 本季范围未命中（文件季号与组季布局不一致，如绝对顺序组）：全局号跨季兜底
     for e in flat:
         if int(e.get("episode_number") or 0) == ep:
             return e, e.get("_group", ""), int(e.get("_sub_season") or 0) or season
@@ -441,7 +482,7 @@ def match_episode(tv_id: int, season: int, ep: int):
 
 
 # --------------------------------------------------------------------------
-# 文件名/标题工具（与 bgm 版一致）
+# 文件名/标题工具
 # --------------------------------------------------------------------------
 CN_NUM = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
 
@@ -590,11 +631,14 @@ def handle_search_item(body: dict):
     path = body.get("fileName") or ""
     info = parse_filename(path)
     nfo = body.get("nfo") or {}
-    req_season = int(nfo.get("season") or 0)
-    req_episode = int(nfo.get("episode") or 0)
-    if req_season <= 0:
+    # nfo 里 season=-1/缺失 表示未指定；显式的 0 是合法的第 0 季（特别篇），
+    # 不能当缺失值覆盖回文件名解析结果（否则手动指定第 0 季会失效）
+    ns, ne = nfo.get("season"), nfo.get("episode")
+    req_season = int(ns) if ns is not None else -1
+    req_episode = int(ne) if ne is not None else -1
+    if req_season < 0:
         req_season = info["season"]
-    if req_episode <= 0:
+    if req_episode < 0:
         req_episode = info["episode"]
     query = clean_title(info["parent"], info["year"], info["season"]) or \
         clean_title(info["grand"], info["year"], info["season"]) or \
@@ -615,27 +659,21 @@ def handle_search_item(body: dict):
     if req_episode <= 0:
         return ok({"cleanData": build_clean_data(tv_id), "episode": None})
 
-    # 规则1：默认集数对比
-    # 若该剧存在主剧集组（结构清晰），直接用主组匹配，避免 TMDB 主表结构混乱（如 Re:Zero Season1=85集）
-    flat = main_group_flat(tv_id)
-    if flat:
-        gep, gname, s_num = match_episode(tv_id, req_season, req_episode)
-        if gep:
-            episode = build_episode(trim, tv_id, gep, s_num, req_episode)
-            log_line(f"[search] {query}: 剧集组 [{gname}] 命中 S{req_season}E{req_episode} -> 全局{req_episode}")
-            return ok({"cleanData": build_clean_data(tv_id), "episode": episode})
-    else:
-        ep = episode_default(tv_id, req_season, req_episode)
-        if ep:
-            episode = build_episode(trim, tv_id, ep, req_season, req_episode)
-            log_line(f"[search] {query}: 默认结构命中 S{req_season}E{req_episode}")
-            return ok({"cleanData": build_clean_data(tv_id), "episode": episode})
+    # 规则1：TMDB 主表（剧集主页的季结构，最权威、新季最全，如无职转生 Season 3）
+    ep = episode_default(tv_id, req_season, req_episode)
+    if ep:
+        episode = build_episode(trim, tv_id, ep, req_season, req_episode)
+        log_line(f"[search] {query}: 默认结构命中 S{req_season}E{req_episode}")
+        _season_ctx_record(tv_id, req_season)
+        return ok({"cleanData": build_clean_data(tv_id), "episode": episode})
 
-    # 规则2：剧集组对比（按全局 episode_number）
+    # 规则2：主表无此集（整季拆分/全局集号的旧结构，如 Re:Zero S1=85 集、
+    # 文件 S04E78 用全局号）→ 主剧集组匹配（组内全局号/季内号换算）
     gep, gname, s_num = match_episode(tv_id, req_season, req_episode)
     if gep:
         episode = build_episode(trim, tv_id, gep, s_num, req_episode)
-        log_line(f"[search] {query}: 剧集组 [{gname}] 命中 全局E{req_episode} -> S{s_num}")
+        log_line(f"[search] {query}: 剧集组 [{gname}] 命中 S{req_season}E{req_episode} -> S{s_num}")
+        _season_ctx_record(tv_id, s_num)
         return ok({"cleanData": build_clean_data(tv_id), "episode": episode})
 
     return fail(404, "not found")
@@ -659,10 +697,29 @@ def season_poster_rel(tv_id: int, tv: dict, season: int) -> str:
     return rel
 
 
+def _group_numbered_seasons(flat: list) -> int:
+    """主剧集组里的编号季个数（sub_season > 0 的去重季号数）。"""
+    return len({int(e.get("_sub_season") or 0) for e in flat
+                if int(e.get("_sub_season") or 0) > 0})
+
+
+def structure_source_is_main(tv: dict, group_seasons: int) -> bool:
+    """季/集结构层的数据源选择：只有主剧集组比主表"认识"更多的编号季时
+    （主表把多季塞在一个编号季里用全局号的旧结构，如 Re:Zero S1=85 集、
+    我独自升级两季合一只报 S1=25，而组里明确拆了 Season 1/2）才按剧集组出结构；
+    其余情况一律主表——包括真单季番（如 Silent Witch：主表 S1=13 是全部，
+    剧集组反而含重复集号的脏数据），主表结构即最终结构，不引入剧集组。"""
+    n_main = sum(1 for s in (tv.get("seasons") or [])
+                 if int(s.get("season_number") or 0) > 0 and int(s.get("episode_count") or 0) > 0)
+    return group_seasons <= n_main
+
+
 def build_tv_out(tv_id: int, tv: dict) -> dict:
     """构建 tv 详情对象（含 seasons[] 与 data_version）。"""
     out = build_tv(tv)
-    # 用主剧集组补充更准的季/集数（若存在）
+    # 结构层数据源与单集匹配同源：主表优先（structure_source_is_main），
+    # 另一侧补齐缺的季——主表缺新季（剧集组未收录的反向：组有主表无）或
+    # 剧集组未收录新播季（主表有组无）时互相补，保证季行完整可归档
     by_season = {}
     flat = main_group_flat(tv_id)
     if flat:
@@ -670,22 +727,40 @@ def build_tv_out(tv_id: int, tv: dict) -> dict:
             s = int(e.get("_sub_season") or 0)
             if s > 0:
                 by_season.setdefault(s, []).append(int(e.get("episode_number") or 0))
-        if by_season:
-            out["number_of_seasons"] = len(by_season)
-            out["number_of_episodes"] = sum(len(v) for v in by_season.values())
-    # 标准 TMDB seasons[]（飞牛可能据此创建/更新季行、季封面）
-    n = int(out.get("number_of_seasons") or 0)
+    main_ep_count = {}
+    for s in tv.get("seasons") or []:
+        sn = int(s.get("season_number") or 0)
+        if sn >= 0:  # 第 0 季（特别篇）也要，否则 S0 不出现在季结构里
+            main_ep_count[sn] = int(s.get("episode_count") or 0)
+    main_first = structure_source_is_main(tv, len(by_season))
+
+    def _cnt(s: int) -> int:
+        if main_first:
+            return main_ep_count.get(s) or len(by_season.get(s) or [])
+        return len(by_season.get(s) or []) or main_ep_count.get(s, 0)
+
+    # 正季数量只统计 S1+（S0 是特别篇，不计入 number_of_seasons）
+    n = max(len([s for s in by_season if s >= 1]),
+            len([s for s in main_ep_count if s >= 1]))
     if n:
+        out["number_of_seasons"] = n
+        out["number_of_episodes"] = sum(_cnt(s) for s in range(1, n + 1))
+        # 标准 TMDB seasons[]（飞牛可能据此创建/更新季行、季封面）
+        # 第 0 季（特别篇）也要给出，否则飞牛拿到的季结构里没有 S0，
+        # 会把 S00Exx 的集归到第 1 季（无职转生 S00E01→S1E1 实测）
+        season_nums = ([0] if _cnt(0) else []) + list(range(1, n + 1))
         seasons_out = []
-        for s in range(1, n + 1):
+        for s in season_nums:
             rel = season_poster_rel(tv_id, tv, s)
             seasons_out.append({
-                "id": s,
-                "name": f"第 {s} 季",
+                # 飞牛 Go 结构体 TvSeasons[].id 是 string，返回数字会导致
+                # 整个 detail/tv 响应 unmarshal 失败、刮削结果被整单丢弃
+                "id": str(s),
+                "name": f"第 {s} 季" if s else "特别篇",
                 "overview": tv.get("overview") or "",
                 "poster_path": img_path(rel),
                 "season_number": s,
-                "episode_count": len(by_season.get(s) or []),
+                "episode_count": _cnt(s),
                 "air_date": tv.get("first_air_date") or "",
             })
         out["seasons"] = seasons_out
@@ -705,33 +780,38 @@ def handle_detail_tv(body: dict):
 
 
 def build_season_out(tv_id: int, tv: dict, season: int) -> dict:
-    """构建 season 详情对象（含 episodes 与 data_version）。"""
+    """构建 season 详情对象（含 episodes 与 data_version）。
+    季集列表数据源与单集匹配同源：主表结构可靠时主表优先（缺该季用剧集组补），
+    主表是全局号塞 S1 的旧结构时剧集组优先（缺该季用主表补）。"""
     trim = f"tm{tv_id}"
     # 季封面：TMDB 季节海报 -> 主海报
     poster_rel = season_poster_rel(tv_id, tv, season)
 
-    # 主剧集组优先：该季子组（组季号=season）
+    def _from_default(eps: list) -> list:
+        return [build_episode(trim, tv_id, e, season, int(e.get("episode_number") or 0))
+                for e in eps]
+
+    def _from_group(items: list) -> list:
+        items = sorted(items, key=lambda e: int(e.get("episode_number") or 0))
+        return _from_default(items)
+
     flat = main_group_flat(tv_id)
     rng = season_range_of(flat, season)
-    if rng:
-        start, end, items = rng
-        items.sort(key=lambda e: int(e.get("episode_number") or 0))
-        ep_out = [build_episode(trim, tv_id, e, season, int(e.get("episode_number") or 0))
-                  for e in items]
+    eps_default = season_episodes_default(tv_id, season)
+    main_first = structure_source_is_main(tv, _group_numbered_seasons(flat))
+    if main_first:
+        ep_out = _from_default(eps_default) if eps_default else (_from_group(rng[2]) if rng else [])
     else:
-        # 无主组：默认结构
-        eps_default = season_episodes_default(tv_id, season)
-        if not eps_default:
-            return {}
-        ep_out = [build_episode(trim, tv_id, e, season, int(e.get("episode_number") or 0))
-                  for e in eps_default]
+        ep_out = _from_group(rng[2]) if rng else (_from_default(eps_default) if eps_default else [])
+    if not ep_out:
+        return {}
     season_obj = {
         "trim_id": trim,
         "tmdb_id": tv_id,
         "imdb_id": "",
         "pinYin": {},
         "air_date": tv.get("first_air_date") or "",
-        "name": f"第 {season} 季",
+        "name": "特别篇" if season == 0 else f"第 {season} 季",
         "overview": tv.get("overview") or "",
         "poster_path": img_path(poster_rel),
         "season_number": season,
@@ -752,7 +832,7 @@ def handle_detail_season(body: dict):
     tv_id = _parse_tm_id(body.get("sourceId") or "")
     if not tv_id:
         return fail(404, "not found")
-    season = int(body.get("season") or 1)
+    season = _season_from_body_or_ctx(tv_id, body)  # 缺 season ≠ S1，飞牛对 S0 不发该字段
     tv = tv_detail(tv_id)
     if not tv:
         return fail(404, "not found")
@@ -766,28 +846,48 @@ def handle_detail_season_episode(body: dict):
     tv_id = _parse_tm_id(body.get("sourceId") or "")
     if not tv_id:
         return fail(404, "not found")
-    season = int(body.get("season") or 1)
+    season = _season_from_body_or_ctx(tv_id, body)  # 缺 season ≠ S1，飞牛对 S0 不发该字段
     ep = int(body.get("episode") or 0)
     if ep <= 0:
         return fail(404, "not found")
     trim = f"tm{tv_id}"
-    gep, _g, s_num = match_episode(tv_id, season, ep)
-    if gep:
-        return ok({"cleanData": build_clean_data(tv_id),
-                   "episode": build_episode(trim, tv_id, gep, s_num, ep)})
+    # 主表优先，未命中再走剧集组（与 /search/item 一致）
     e = episode_default(tv_id, season, ep)
     if e:
         return ok({"cleanData": build_clean_data(tv_id),
                    "episode": build_episode(trim, tv_id, e, season, ep)})
+    gep, _g, s_num = match_episode(tv_id, season, ep)
+    if gep:
+        return ok({"cleanData": build_clean_data(tv_id),
+                   "episode": build_episode(trim, tv_id, gep, s_num, ep)})
     return fail(404, "not found")
+
+
+def _structure_season_count(tv_id: int) -> int:
+    """与 /detail/tv 同源的结构季数（主表与剧集组取大），供搜索列表展示/校验。"""
+    tv = tv_detail(tv_id)
+    if not tv:
+        return 0
+    group_seasons = set()
+    for e in main_group_flat(tv_id):
+        s = int(e.get("_sub_season") or 0)
+        if s > 0:
+            group_seasons.add(s)
+    n_main = sum(1 for s in tv.get("seasons") or [] if int(s.get("season_number") or 0) > 0)
+    return max(len(group_seasons), n_main)
 
 
 def handle_search_multi(body: dict):
     keyword = (body.get("keyword") or "").strip()
     if not keyword:
         return ok({"list": []})
+    results = search_tv(keyword)[:20]
+    # 补真实结构季数：TMDB 搜索接口不含季数字段，透传 0 会让飞牛匹配弹窗
+    # 拿到"共 0 季"的候选，选中超后无后续动作（无职转生 S3 手动匹配实测）
+    with ThreadPoolExecutor(max_workers=5) as ex:
+        counts = list(ex.map(lambda r: _structure_season_count(int(r.get("id") or 0)), results[:10]))
     out = []
-    for r in search_tv(keyword)[:20]:
+    for i, r in enumerate(results):
         out.append({
             "source": "trim_id",
             "sourceId": f"tm{r.get('id')}",
@@ -798,7 +898,7 @@ def handle_search_multi(body: dict):
             "productionCountries": [],
             "firstAirDate": r.get("first_air_date") or "",
             "lastAirDate": "",
-            "numberOfSeasons": r.get("number_of_seasons") or 0,
+            "numberOfSeasons": counts[i] if i < len(counts) else 0,
         })
     return ok({"list": out})
 
@@ -1156,7 +1256,7 @@ def handle_meta_diff(body: dict):
         return ok({"hasDiff": True, "tv": tv_data})
 
     if cat == "season":
-        season = int(body.get("seasonNumber") or 1)
+        season = _season_from_body_or_ctx(tv_id, body)  # 缺 seasonNumber ≠ S1，同上按上下文兜底
         tv = tv_detail(tv_id)
         if not tv:
             return ok({"hasDiff": False})
@@ -1168,18 +1268,19 @@ def handle_meta_diff(body: dict):
         s_data = {k: v for k, v in season_obj.items() if k != "data_version"}
         return ok({"hasDiff": True, "season": s_data})
 
-    # 单集
+    # 单集：主表优先，未命中再走剧集组（seasonNumber=0 是特别篇，不能换成 S1）
     ep_number = int(body.get("episodeNumber") or -1)
     season = int(body.get("seasonNumber") or 0)
     if ep_number <= 0:
         return ok({"hasDiff": False})
-    gep, _g, s_num = match_episode(tv_id, season or 1, ep_number)
-    e = gep
+    e = episode_default(tv_id, season, ep_number)
+    s_num = season
     if not e:
-        e = episode_default(tv_id, season or 1, ep_number)
+        gep, _g, s_num = match_episode(tv_id, season, ep_number)
+        e = gep
     if not e:
         return ok({"hasDiff": False})
-    episode = build_episode(f"tm{tv_id}", tv_id, e, s_num or season or 1, ep_number)
+    episode = build_episode(f"tm{tv_id}", tv_id, e, s_num, ep_number)
     if cur_ver == episode.get("data_version"):
         return ok({"hasDiff": False})
     return ok({"hasDiff": True, "episode": episode})
@@ -1330,6 +1431,11 @@ class Handler(BaseHTTPRequestHandler):
         if body:
             log_line(f"--- Body ({len(body)} bytes) ---")
             log_line(body.decode("utf-8", "replace")[:500])
+        if self.command == "POST" and split.path != "/healthz":
+            # 临时调试：记录请求头（抓飞牛的签名头，用于与原版 fnnas 响应对比）
+            hdrs = {k: v for k, v in self.headers.items()
+                    if k.lower() not in ("cookie", "authorization")}
+            log_line(f"--- Headers: {json.dumps(hdrs, ensure_ascii=False)}")
 
         path = split.path
         try:

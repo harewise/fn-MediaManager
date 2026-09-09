@@ -1,50 +1,22 @@
 # trim-media TMDB 刮削源（tmdb_provider）
 
-为飞牛 fnOS 的 **trim-media（飞牛影视）** 提供自建刮削数据源：TMDB 官方 API + **剧集组精确匹配**，
+为飞牛 fnOS 的 **trim-media（飞牛影视）** 提供自建刮削数据源：TMDB 官方 API + 剧集组精确匹配，
 解决默认源（mediasvc.fnnas.com）对动漫"整季拆分 / 全局集号"匹配错乱、封面简介缺失的问题。
-
-单文件 Python、零第三方依赖（仅相似图去重用到 `ffmpeg`）；
-Docker 镜像由 GitHub Actions 自动构建并发布到 ghcr.io。
-
-> 命名说明：项目早期用 bgm.tv 做数据源，后整体切换为 TMDB 官方接口（协议与飞牛原源一致，前端无感），
-> bgm 相关代码已于 2026-09-05 全部移除。
-
-## 架构
-
-```
-[飞牛 trim-media :8005] --item/subtitle--> [tmdb_provider :38080] --> api.tmdb.org/3（zh-CN）
-                                       /t/p/* 图片 --> image.tmdb.org（按类型降尺寸代理）
-                                       /v1/*  字幕  --> subtitle-service.fnnas.com（原样转发）
-```
-
-## 功能特性
-
-- **剧集组匹配**：TMDB 常把动漫全部集放在 S1 里用全局号（如 Re:Zero S1=85 集），而文件按 S1-S4 分季命名。
-  provider 取 TMDB Episode Groups（优先 `Seasons` 组），组内全局号直接命中；季内号自动换算（季起始号+ep-1）。
-- **剧集组缓存自愈**：缓存带 12h TTL；命中"已播出但仍无剧照无简介"的占位集（TMDB 数据晚于播出完善）时，
-  限频强制重取并重试——解决"刚播出的剧集刷新元数据没反应"。
-- **图片搜索 `/meta/images`**：posters / backdrops / logos 三类；候选图按感知哈希（12x12 RGB + 24x24 梯度，ffmpeg 提取）
-  聚类，同一张图的多分辨率/多语言版本只留最大一张（对齐 TMDB 网页的相似图分组）。
-- **图片代理**：飞牛本地图片缓存回退 → TMDB（keep-alive 连接池 + 按类型降尺寸 + 磁盘缓存 +
-  每日保底清理：超 500MB 按文件新旧删到 300MB）。
-- **字幕转发**：`/v1/*` 原样转发 subtitle-service.fnnas.com。
-- 单集无截图时返回空 `still_path`，由飞牛从视频自动截帧（与原源行为一致）。
+单文件 Python、零第三方依赖（仅相似图去重用到 `ffmpeg`）。
 
 ## 快速开始（Docker Compose，推荐）
-
-> 镜像地址：`ghcr.io/harewise/fn-mediamanager:latest`，**发布 Release 时自动构建**（仓库名自动转小写）。
 
 **0. 前置**：[themoviedb.org](https://www.themoviedb.org/settings/api) 免费申请 API Key。
 
 **1. 获取镜像**：
 
 ```bash
-# 日常 push 不触发构建；发布 Release（tag 形如 v1.0.0）才自动构建，
-# 产出镜像 tag：1.0.0 / 1.0 / latest。手动重建：仓库 Actions 页 → Run workflow（刷新 latest）。
-# 首次构建后，到仓库 Packages 页把镜像可见性改为 Public，NAS 才能免登录拉取；
-# 保持 Private 则 NAS 上需先 docker login ghcr.io（PAT 即可）。
 docker pull ghcr.io/harewise/fn-mediamanager:latest
 ```
+
+> 镜像在发布 Release（tag 形如 v1.0.0）时自动构建，产出 tag：1.0.0 / 1.0 / latest。
+> 首次构建后，到仓库 Packages 页把镜像可见性改为 Public，NAS 才能免登录拉取；
+> 保持 Private 则 NAS 上需先 `docker login ghcr.io`（PAT 即可）。
 
 **2. 部署**（NAS 上运行只需要 docker-compose.yml + .env 两个文件，镜像从 ghcr 拉取）：
 
@@ -112,22 +84,6 @@ setsid nohup python3 tmdb_provider.py >> logs/tmdb.out 2>&1 < /dev/null &
 sleep 2; curl -s http://127.0.0.1:38080/healthz
 ```
 
-## 接口
-
-| 接口 | 说明 |
-|---|---|
-| `POST /search/item` | 按文件路径搜索剧集/集数，返回 `cleanData` + `episode` |
-| `POST /search/multi` | 关键字搜索 |
-| `POST /detail/tv` | 剧集详情（含按剧集组修正的季/集数） |
-| `POST /detail/tv/season` | 季详情（集列表） |
-| `POST /detail/tv/season/episode` | 单集详情 |
-| `POST /meta/diff` | 元数据差量比对（dataVersion 不同才返回新数据） |
-| `POST /meta/images` | 图片搜索（海报/背景/logo，相似图归组） |
-| `POST /genres` | 类型列表 |
-| `GET /t/p/*` | 图片代理（本地缓存回退 → TMDB 降尺寸） |
-| `GET /match` | 返回 404（与飞牛原服务行为一致，**不是故障**） |
-| `/v1/*` | 字幕服务转发 |
-
 ## 调试
 
 ```bash
@@ -147,13 +103,5 @@ curl -s -X POST http://127.0.0.1:38080/meta/diff \
 
 - TMDB 没播出的集本身就是占位数据（标题"第 N 集"、无截图），播出后缓存会在 TTL 内自动纠正。
 - 人物详情（`/detail/person`）未实现，返回空数据。
+- `GET /match` 返回 404 与飞牛原服务行为一致，**不是故障**。
 - 相似图聚类依赖 ffmpeg，缺失时仅去重功能退化，其余不受影响。
-
-## 变更记录
-
-- **2026-09-06** 剧集组缓存加 12h TTL + 占位数据限频强刷（修复"刷新元数据无效果"）；
-  海报/剧照降为 w500（实测与飞牛原源交付体积一致）、未知类型图片兜底 w500 不再回落原图；
-  图片磁盘缓存每日保底清理（>500MB 清到 300MB）；配置支持环境变量注入；GitHub Actions 自动构建镜像。
-- **2026-09-05** 端口改 38080；图片管线重做（keep-alive 连接池、按类型降尺寸、并行预取、相似图聚类）；
-  bgm 图源代码移除；service-setup 健康检查版安装。
-- **2026-08-28~29** 项目创建（bgm.tv 方案），后切换 TMDB 官方 API + 剧集组匹配。

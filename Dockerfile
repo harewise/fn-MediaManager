@@ -6,7 +6,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY tmdb_provider.py ./
+# --chmod：宿主机源码可能是 600（仅属主可读），容器内以 1000:1001 运行必须放开读权限
+COPY --chmod=0644 tmdb_provider.py ./
 
 # 配置不进镜像：api_key 等全部通过环境变量在运行时注入（见 README 配置表）
 ENV TZ=Asia/Shanghai \
