@@ -2,7 +2,7 @@
 
 为飞牛 fnOS 的 **trim-media（飞牛影视）** 提供自建刮削数据源：TMDB 官方 API + 剧集组精确匹配，
 解决默认源（mediasvc.fnnas.com）对动漫"整季拆分 / 全局集号"匹配错乱、封面简介缺失的问题。
-单文件 Python、零第三方依赖（仅相似图去重用到 `ffmpeg`）。支持剧集与电影。
+单文件 Python、零第三方依赖。支持剧集与电影。
 
 ## 快速开始（Docker Compose，推荐）
 
@@ -121,4 +121,5 @@ curl -s -X POST http://127.0.0.1:38080/meta/diff \
   `/detail/movie` 详情、`/meta/diff` 电影差量均已支持；手动搜索候选含电影。
 - 人物详情（`/detail/person`）未实现，返回空数据。
 - `GET /match` 返回 404 与飞牛原服务行为一致，**不是故障**。
-- 相似图聚类依赖 ffmpeg，缺失时仅去重功能退化，其余不受影响。
+- 镜像不含 ffmpeg（省约 450MB）：`/meta/images` 候选海报的相似去重随之禁用（近重复图不再
+  合并，其余不受影响），启动日志会提示；宿主机装有 ffmpeg 时直跑自动启用。

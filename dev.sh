@@ -7,7 +7,7 @@
 #   bash dev.sh down       #         停掉调试容器
 #
 #   bash dev.sh host       # 方式二：宿主机直跑（前台，Ctrl-C 停止），可下断点/加 print，
-#                          #         Python 3.11 与镜像同版本、ffmpeg 已装，功能完全一致
+#                          #         Python 3.11 与镜像同版本；宿主机 ffmpeg 使相似图去重可用（镜像内已省略）
 #
 #   bash dev.sh test       # 离线单测（最快反馈，秒级）：逻辑改动先跑这个，不用起任何服务
 #   bash dev.sh fixtures   # 重新录制 TMDB fixture（联网，仅测试数据变化时才需要）

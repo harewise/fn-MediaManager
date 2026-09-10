@@ -1244,7 +1244,8 @@ def _prefetch_images(items):
 # （异图 rgb 最高实测 0.687，同图 rgb 最低实测 0.733，0.71 居中）
 # 曾用 9x8 dHash：对文字/裁切变体漏判、对不同图误判，已弃用。
 # --------------------------------------------------------------------------
-FFMPEG_BIN = shutil.which("ffmpeg") or "/usr/bin/ffmpeg"
+# 相似图去重用 ffmpeg 解码缩略图；缺失时该功能自动禁用（见 _sim_feat），其余不受影响
+FFMPEG_BIN = shutil.which("ffmpeg") or ""
 _SIM_RGB = 0.71
 _SIM_RGB2 = 0.50
 _SIM_EDGE = 0.55
@@ -1262,6 +1263,8 @@ def _sim_feat(path: str, kind: str):
         hit = STATE["img_feat"].get(fp)
     if hit is not None:
         return _feat_unpack(hit)
+    if not FFMPEG_BIN:      # 无 ffmpeg（镜像默认）：不取图不解码；已有持久特征仍可参与去重
+        return None
     sub = _thumb_sub(path, kind)
     try:
         fetch_tmdb_bytes(sub)          # 缩略图落盘（cache/img）
@@ -1712,6 +1715,10 @@ def main():
     threading.Thread(target=_img_cache_cleanup_loop, daemon=True).start()
     log_line(f"[start] 图片缓存保底清理：>{IMG_CACHE_MAX // 1048576}MB 时清到 {IMG_CACHE_KEEP // 1048576}MB，"
              f"每 {IMG_CACHE_CHECK_EVERY // 3600}h 检查一次")
+    if FFMPEG_BIN:
+        log_line(f"[start] 相似图去重：ffmpeg 就绪（{FFMPEG_BIN}）")
+    else:
+        log_line("[start] 未检测到 ffmpeg：相似图去重已禁用（候选海报不再合并近重复），其余功能不受影响")
 
     server = ThreadingHTTPServer((bind, port), Handler)
     try:
