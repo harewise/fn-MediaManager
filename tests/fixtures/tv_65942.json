@@ -1,0 +1,174 @@
+{
+ "adult": false,
+ "backdrop_path": "/qrYep23cjwdlwgfvyoO51YD9JrI.jpg",
+ "created_by": [],
+ "episode_run_time": [
+  25
+ ],
+ "first_air_date": "2016-04-04",
+ "genres": [
+  {
+   "id": 16,
+   "name": "动画"
+  },
+  {
+   "id": 9648,
+   "name": "悬疑"
+  },
+  {
+   "id": 10759,
+   "name": "动作冒险"
+  },
+  {
+   "id": 10765,
+   "name": "Sci-Fi & Fantasy"
+  }
+ ],
+ "homepage": "http://re-zero-anime.jp/",
+ "id": 65942,
+ "in_production": true,
+ "languages": [
+  "ja"
+ ],
+ "last_air_date": "2026-09-09",
+ "last_episode_to_air": {
+  "id": 7130172,
+  "name": "菜月·昴",
+  "overview": "仅仅不断累积死亡次数，状况也不会好转，十五次死亡逐渐磨损着昴的精神。被告知可以在书库休息的昴，发现了一本写着“菜月·昴”之名的死者之书。其中记载的，是本应已经失去的“死亡回归”的记忆：被剖开肚子、惨死的记忆。书架上还收藏着第二本、第三本……记录着迄今为止每一次死亡的记忆。为什么你会如此特别？为了寻找某种与自己不同的东西，昴追随着一个少年踏上了异世界生活的脚步一路走下去。",
+  "vote_average": 9.1,
+  "vote_count": 16,
+  "air_date": "2026-09-09",
+  "episode_number": 82,
+  "episode_type": "standard",
+  "production_code": "",
+  "runtime": 27,
+  "season_number": 1,
+  "show_id": 65942,
+  "still_path": "/dy6GvxGaNYDqxNGkwMm8AUhfrNv.jpg"
+ },
+ "name": "Re：从零开始的异世界生活",
+ "next_episode_to_air": {
+  "id": 7130173,
+  "name": "第 83 集",
+  "overview": "",
+  "vote_average": 10.0,
+  "vote_count": 2,
+  "air_date": "2026-09-16",
+  "episode_number": 83,
+  "episode_type": "standard",
+  "production_code": "",
+  "runtime": null,
+  "season_number": 1,
+  "show_id": 65942,
+  "still_path": null
+ },
+ "networks": [
+  {
+   "id": 98,
+   "logo_path": "/jnuO8pZNEBLEq5YaOP1f5OkmG91.png",
+   "name": "TV Tokyo",
+   "origin_country": "JP"
+  },
+  {
+   "id": 173,
+   "logo_path": "/fERjndErEpveJmQZccJbJDi93rj.png",
+   "name": "AT-X",
+   "origin_country": "JP"
+  }
+ ],
+ "number_of_episodes": 85,
+ "number_of_seasons": 1,
+ "origin_country": [
+  "JP"
+ ],
+ "original_language": "ja",
+ "original_name": "Re:ゼロから始める異世界生活",
+ "overview": "在异世界陷入迷茫的普通高中生菜月昴，邂逅了一位银发的美少女。但想助她一臂之力的昴，却一次次地遭遇敌袭，背叛、暴力，甚至是死亡……“死亡回归”——无力的少年拥有的唯一能力，能将死后时间倒转回一开始。使用了这般力量，便会失去过去的回忆，可为了守护最重要的人们，昴必须抗争到底。“即使你忘却了我，我也不会遗忘你。”",
+ "popularity": 91.3555,
+ "poster_path": "/a1pMK4456dF2j5B9xvkjMEGiOOw.jpg",
+ "production_companies": [
+  {
+   "id": 12569,
+   "logo_path": "/pROt6mT15AC5aTadf7NRBRiTVo3.png",
+   "name": "White Fox",
+   "origin_country": "JP"
+  },
+  {
+   "id": 2073,
+   "logo_path": "/tWxRSaKmRJNTcmtlXsmn5R4KOSU.png",
+   "name": "KADOKAWA",
+   "origin_country": "JP"
+  },
+  {
+   "id": 142186,
+   "logo_path": "/bdXTOuU7PdsDtQngyM7vb47zePs.png",
+   "name": "Hakuhodo DY Music & Pictures",
+   "origin_country": "JP"
+  },
+  {
+   "id": 157002,
+   "logo_path": "/hSdroyVthq3CynxTIIY7lnS8w1.png",
+   "name": "Tokyo MX",
+   "origin_country": "JP"
+  },
+  {
+   "id": 17981,
+   "logo_path": "/8UABNMysukRi4udTHYxcNUMbPR1.png",
+   "name": "AT-X",
+   "origin_country": "JP"
+  },
+  {
+   "id": 12540,
+   "logo_path": null,
+   "name": "Memory-Tech",
+   "origin_country": "JP"
+  },
+  {
+   "id": 225089,
+   "logo_path": "/g2DdqSxJNOzr9uoEwAcOcSi6DRQ.png",
+   "name": "DAXEL",
+   "origin_country": "JP"
+  }
+ ],
+ "production_countries": [
+  {
+   "iso_3166_1": "JP",
+   "name": "Japan"
+  }
+ ],
+ "seasons": [
+  {
+   "air_date": "2016-04-05",
+   "episode_count": 82,
+   "id": 76465,
+   "name": "特别篇",
+   "overview": "",
+   "poster_path": "/4Gsh6zCE6SYNlal3FW6scj3PkAz.jpg",
+   "season_number": 0,
+   "vote_average": 0.0
+  },
+  {
+   "air_date": "2016-04-04",
+   "episode_count": 85,
+   "id": 75470,
+   "name": "第 1 季",
+   "overview": "在从便利商店回家的路上，突然被异世界召唤的少年菜月昴。在无法依靠任何东西的异世界，无力的少年手唯一的力量……那是“死去然后重新开始”的力量。为了守护最重要的人们，为了取回确实存在着又无可替代的时间，少年抗拒着绝望，勇敢地面对着残酷的命运。",
+   "poster_path": "/hslDfZUH1d4wRq860G9o3vMmcIH.jpg",
+   "season_number": 1,
+   "vote_average": 9.5
+  }
+ ],
+ "softcore": false,
+ "spoken_languages": [
+  {
+   "english_name": "Japanese",
+   "iso_639_1": "ja",
+   "name": "日本語"
+  }
+ ],
+ "status": "Returning Series",
+ "tagline": "死亡不过是下一次重逢的起点",
+ "type": "Scripted",
+ "vote_average": 8.1,
+ "vote_count": 774
+}

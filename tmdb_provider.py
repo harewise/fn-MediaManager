@@ -151,12 +151,14 @@ STATE = {
 }
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CACHE_FILE = os.path.join(SCRIPT_DIR, "cache", "tmdb_cache.json")  # 剧集组/季封面/图片类型/聚类特征 合一缓存
+# TMDB_CACHE_DIR：调试时与生产实例隔离缓存（不设置则与原行为完全一致）
+CACHE_ROOT = os.environ.get("TMDB_CACHE_DIR") or os.path.join(SCRIPT_DIR, "cache")
+CACHE_FILE = os.path.join(CACHE_ROOT, "tmdb_cache.json")  # 剧集组/季封面/图片类型/聚类特征 合一缓存
 
 GROUP_TTL = 12 * 3600        # 剧集组缓存有效期（秒）；过期后首个请求重取，追上 TMDB 新播出/修订的集数据
 GROUP_REFETCH_MIN = 600      # 命中占位数据时限频强刷的最小间隔（秒），TMDB 确实无数据时避免反复请求
 
-IMG_CACHE_DIR = os.path.join(SCRIPT_DIR, "cache", "img")
+IMG_CACHE_DIR = os.path.join(CACHE_ROOT, "img")
 IMG_CACHE_MAX = 500 * 1024 * 1024   # 图片磁盘缓存保底清理阈值；超过则按文件从旧到新删
 IMG_CACHE_KEEP = 300 * 1024 * 1024  # 清理到该大小为止
 IMG_CACHE_CHECK_EVERY = 24 * 3600    # 清理检查间隔（秒）

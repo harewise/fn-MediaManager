@@ -1,0 +1,27 @@
+{
+ "page": 1,
+ "results": [
+  {
+   "adult": false,
+   "backdrop_path": "/k1ziDzX0u8HgrAYshMb082nvtrF.jpg",
+   "genre_ids": [
+    28,
+    35
+   ],
+   "id": 51533,
+   "title": "让子弹飞",
+   "original_language": "zh",
+   "original_title": "让子弹飞",
+   "overview": "民国年间，花钱捐得县长的马邦德携妻赴任途中，遭到悍匪张麻子一伙伏击。为了保住性命，马邦德谎称自己只是师爷，并以鹅城丰厚的油水为诱饵，怂恿张麻子冒充县长前去上任。张麻子带着兄弟来到鹅城，却发现这里早已被豪绅黄四郎牢牢把持。原本只想捞些实利的张麻子不肯按黄四郎的规矩办事，反而处处与其针锋相对。一个是冒名上任的悍匪，一个是只手遮天的地头蛇，夹在两人之间的马邦德也不得不左右周旋，一场围绕权势、利益与人心的明争暗斗就此展开……",
+   "popularity": 5.9406,
+   "poster_path": "/p5KiZq5MtGExUhmgPbpwiGFzALt.jpg",
+   "release_date": "2010-12-20",
+   "softcore": false,
+   "video": false,
+   "vote_average": 7.8,
+   "vote_count": 360
+  }
+ ],
+ "total_pages": 1,
+ "total_results": 1
+}

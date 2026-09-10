@@ -2,7 +2,7 @@
 
 为飞牛 fnOS 的 **trim-media（飞牛影视）** 提供自建刮削数据源：TMDB 官方 API + 剧集组精确匹配，
 解决默认源（mediasvc.fnnas.com）对动漫"整季拆分 / 全局集号"匹配错乱、封面简介缺失的问题。
-单文件 Python、零第三方依赖（仅相似图去重用到 `ffmpeg`）。
+单文件 Python、零第三方依赖（仅相似图去重用到 `ffmpeg`）。支持剧集与电影。
 
 ## 快速开始（Docker Compose，推荐）
 
@@ -44,7 +44,7 @@ curl -s http://127.0.0.1:38080/healthz      # {"code":0,...} 即正常
 | — | `tmdb_base` / `img_base` | TMDB 官方 | API/图片源地址，仅配置文件可改，一般不用动 |
 | — | `img_original_size` | `false` | `true` 时图片代理不降尺寸，始终取原图 |
 
-## trim-media 接线（service-setup 写死版）
+## 接入 trim-media（service-setup 写死版）
 
 编辑 `/var/apps/trim.media/cmd/service-setup`，把选源逻辑删掉，**无条件**写死：
 
@@ -56,10 +56,10 @@ ITEM_OPT="--item=${CUSTOM_SRC_BASE}"
 SUBTITLE_OPT="--subtitle=${CUSTOM_SRC_BASE}"
 ```
 
-- 生效时机：trim-media 下次启动/重启（不需要立刻重启，当前参数不变就不用动）。
+- 生效时机：trim-media 下次启动/重启（当前参数不变就不用立刻动）。
 - 代价：写死后不再自动回退飞牛默认源——**provider 不在，刮削就全部失败**，
-  所以请确保 provider 常驻（Docker `restart: unless-stopped` 或 systemd）。
-- 飞牛应用升级可能覆盖此文件：重新拷回即可（本机留有备份；仓库不携带，内容就上面 4 行核心）。
+  所以请确保 provider 常驻（Docker `restart: unless-stopped`）。
+- 飞牛应用升级可能覆盖此文件：重新拷回即可（内容就上面 4 行核心）。
 
 重启 trim-media（必须带 TRIM_* 环境变量，应用中心就是这样调用的）：
 
@@ -72,32 +72,47 @@ sudo env $E /var/apps/trim.media/cmd/main start
 ps -ef | grep "[a]ppcenter/trim.media/trim-media" | grep -o "\-\-item[^ ]*"
 ```
 
-## 手动运行（不用 Docker）
-
-```bash
-cd 项目目录
-cp tmdb_config.example.json tmdb_config.json   # 填入 api_key（此文件已被 .gitignore 排除）
-
-# kill 与启动分两条命令执行！（同一条命令里 pkill 会匹配到自身命令文本而自杀）
-ss -tlnp | grep :38080                          # 找到旧 pid 先 kill
-setsid nohup python3 tmdb_provider.py >> logs/tmdb.out 2>&1 < /dev/null &
-sleep 2; curl -s http://127.0.0.1:38080/healthz
-```
-
-## 调试
+## 日常运维
 
 ```bash
 tail -f logs/requests_tmdb.log                # 请求日志（占位强刷会打 [group] 行）
-docker logs -f tmdb-provider                  # 容器模式看控制台日志
+docker logs -f tmdb-provider                  # 容器控制台日志
 
-# 手动验证单集匹配（返回 hasDiff:true + 集数据）
+# 验证单集匹配（返回 hasDiff:true + 集数据）
 curl -s -X POST http://127.0.0.1:38080/meta/diff \
   -d '{"dataVersion":"","category":"episode","language":"zh-CN","trimId":"tm65942","seasonNumber":4,"episodeNumber":81}'
 ```
 
 **"刷新元数据没反应"排查顺序**：请求日志里有没有对应请求 → 没有则是 trim 侧没发出来；
 有且返回 `hasDiff:false` → provider 判定 trim 已是最新（若集数据是占位的，日志会有 `[group]` 强刷行，
-重启容器/进程可清缓存强刷一次）。
+重启容器可清缓存强刷一次）。
+
+## 开发与调试
+
+改代码后的三层验证（从快到慢），均不影响生产实例（38080）：
+
+| 命令 | 用途 |
+|---|---|
+| `bash dev.sh test` | 离线单测（秒级）：fixture 回放 TMDB 响应，不耗 API 配额 |
+| `bash dev.sh host` | 宿主机直跑 38081，前台可断点（VS Code F5 已配好） |
+| `bash dev.sh up` / `restart` / `down` | 调试容器 38081：源码 bind mount，改代码 restart 即生效免 rebuild |
+
+- 测试数据来自 `tests/fixtures/`（真实 TMDB 响应录制）；数据过期或新增场景时 `bash dev.sh fixtures` 联网重录。
+- 覆盖端口须用 `TMDB_PORT` 环境变量：优先级高于配置文件里的 `port`，`--port` 参数最低。
+- 不用 Docker 部署时直接 `python3 tmdb_provider.py`（按配置文件键准备 `tmdb_config.json`，
+  模板见 `tmdb_config.example.json`）。**杀旧进程与启动必须分两条命令**——同一条里 pkill 会
+  匹配到自身命令文本而自杀。
+
+## 项目结构
+
+| 路径 | 内容 |
+|---|---|
+| `tmdb_provider.py` | 全部源码（单文件） |
+| `Dockerfile` / `docker-compose.yml` | 生产部署 |
+| `docker-compose.debug.yml` / `dev.sh` | 调试环境（38081，与生产互不影响） |
+| `tests/` | 离线单测 + TMDB fixture（录制/回放，见 `tests/record_fixtures.py`） |
+| `docs/` | 飞牛影视接口协议 |
+| `tmdb_config.example.json` | 配置模板（手动部署用；Docker 只需 `.env`） |
 
 ## 已知行为与限制
 

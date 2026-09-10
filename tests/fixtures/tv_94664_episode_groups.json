@@ -1,0 +1,32 @@
+{
+ "results": [
+  {
+   "description": "",
+   "episode_count": 49,
+   "group_count": 2,
+   "id": "6a07d0be66629c774e0fceec",
+   "name": "DVD Order",
+   "network": null,
+   "type": 3
+  },
+  {
+   "description": "",
+   "episode_count": 50,
+   "group_count": 6,
+   "id": "61d225784d0e8d0069c57beb",
+   "name": "Cours",
+   "network": null,
+   "type": 6
+  },
+  {
+   "description": "",
+   "episode_count": 50,
+   "group_count": 4,
+   "id": "67958cd757975f1b0b18ac91",
+   "name": "Seasons",
+   "network": null,
+   "type": 7
+  }
+ ],
+ "id": 94664
+}

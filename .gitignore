@@ -10,7 +10,7 @@ logs/
 __pycache__/
 *.pyc
 
-# 本机专属：备份与系统脚本（路径硬编码，不适合公开）
-backup/
-systemd/
-trim_source_watchdog.sh
+# 调试实例的运行数据与 IDE 配置（本机专属，删除后下次调试自动重建）
+cache-debug/
+logs-debug/
+.vscode/

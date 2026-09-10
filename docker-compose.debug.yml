@@ -1,0 +1,30 @@
+# 调试专用实例：与生产 docker-compose.yml 完全独立（不同项目名/容器名/端口/缓存目录），
+# 生产容器 tmdb-provider 照常运行，互不影响。配合 dev.sh 使用：
+#   bash dev.sh up        # 启动调试容器（127.0.0.1:38081）
+#   bash dev.sh restart   # 改完 tmdb_provider.py 后重启生效（无需重新构建镜像）
+name: fn-mediamanager-debug       # 中文目录名无法派生项目名，须显式指定
+services:
+  tmdb-provider:
+    image: ghcr.io/harewise/fn-mediamanager:latest
+    container_name: tmdb-provider-debug
+    restart: unless-stopped
+    user: "1000:1001"
+    environment:
+      TZ: Asia/Shanghai
+      TMDB_API_KEY: ${TMDB_API_KEY:?请先在同目录 .env 里配置 TMDB_API_KEY}
+      TMDB_BIND: 0.0.0.0
+      TMDB_LOG_FILE: /app/logs/requests_tmdb.log
+    ports:
+      - "127.0.0.1:38081:38080"        # 调试实例用 38081，不占生产的 38080
+    volumes:
+      # 源码直接挂进容器：改代码 restart 即生效，不用 rebuild（文件属主是宿主机 1000，600 权限也能读）
+      - ./tmdb_provider.py:/app/tmdb_provider.py:ro
+      - ./cache-debug:/app/cache       # 与生产缓存隔离，调试不会污染生产数据
+      - ./logs-debug:/app/logs
+      - /vol1/@appmeta/trim.media/img:/vol1/@appmeta/trim.media/img:ro   # 与生产一致：飞牛图片缓存回退
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:38080/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
