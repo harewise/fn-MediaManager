@@ -80,7 +80,7 @@ docker logs -f tmdb-provider                  # 容器控制台日志
 
 # 验证单集匹配（返回 hasDiff:true + 集数据）
 curl -s -X POST http://127.0.0.1:38080/meta/diff \
-  -d '{"dataVersion":"","category":"episode","language":"zh-CN","trimId":"tm65942","seasonNumber":4,"episodeNumber":81}'
+  -d '{"dataVersion":"","category":"episode","language":"zh-CN","trimId":"tt65942","seasonNumber":4,"episodeNumber":81}'
 ```
 
 **"刷新元数据没反应"排查顺序**：请求日志里有没有对应请求 → 没有则是 trim 侧没发出来；

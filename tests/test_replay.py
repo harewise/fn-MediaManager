@@ -96,7 +96,7 @@ class TestReplay(unittest.TestCase):
             out = tp.handle_search_by_hash({"thirdPartyHash": "abc", "fileName": MOVIE_FILE})
         self.assertEqual(out["code"], 0)
         self.assertIsNone(out["data"]["episode"])
-        self.assertEqual(out["data"]["cleanData"]["trimId"], "tm51533")
+        self.assertEqual(out["data"]["cleanData"]["trimId"], "tt51533")
 
     def test_movie_hash_garbage_name_404(self):
         # 阈值拦截：不相干的文件名不许胡乱命中电影

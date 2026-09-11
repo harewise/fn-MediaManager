@@ -631,7 +631,10 @@ def build_episode(trim, tmdb_id, ep, season_number: int, episode_number: int) ->
 
 
 def build_clean_data(tmdb_id) -> dict:
-    return {"trimId": f"tm{tmdb_id}", "tmdbId": tmdb_id, "imdbId": "", "doubanId": 0, "pinYin": {}}
+    # ID 统一 tt 前缀，与默认源体系的存量条目一致：飞牛对识别结果原样入库、
+    # 不按 tmdb_id 去重，返回 tm 会让追新剧新集建档时拆出第二条同剧条目
+    # （转生史莱姆 S04E22、与你相恋到生命尽头 实测拆分）；请求侧 tm/tt 都收。
+    return {"trimId": f"tt{tmdb_id}", "tmdbId": tmdb_id, "imdbId": "", "doubanId": 0, "pinYin": {}}
 
 
 def build_tv(tv: dict) -> dict:
@@ -643,7 +646,7 @@ def build_tv(tv: dict) -> dict:
     seasons = tv.get("seasons") or []
     main = [s for s in seasons if s.get("season_number", 0) > 0]
     data = {
-        "trim_id": f"tm{tv.get('id')}",
+        "trim_id": f"tt{tv.get('id')}",
         "id": tv.get("id"),
         "imdb_id": "",
         "pinYin": {},
@@ -684,7 +687,7 @@ def build_movie(m: dict) -> dict:
     back = m.get("backdrop_path") or ""
     genres = [{"id": g.get("id"), "name": g.get("name")} for g in m.get("genres") or []]
     data = {
-        "trim_id": f"tm{m.get('id')}",
+        "trim_id": f"tt{m.get('id')}",
         "id": m.get("id"),
         "imdb_id": m.get("imdb_id") or "",
         "pinYin": {},
@@ -779,7 +782,7 @@ def handle_search_item(body: dict):
     if not subj:
         return fail(404, "not found")
     tv_id = int(subj["id"])
-    trim = f"tm{tv_id}"
+    trim = f"tt{tv_id}"
 
     # 规则1：TMDB 主表（剧集主页的季结构，最权威、新季最全，如无职转生 Season 3）
     ep = episode_default(tv_id, req_season, req_episode)
@@ -947,7 +950,7 @@ def build_season_out(tv_id: int, tv: dict, season: int) -> dict:
     """构建 season 详情对象（含 episodes 与 data_version）。
     季集列表数据源与单集匹配同源：主表结构可靠时主表优先（缺该季用剧集组补），
     主表是全局号塞 S1 的旧结构时剧集组优先（缺该季用主表补）。"""
-    trim = f"tm{tv_id}"
+    trim = f"tt{tv_id}"
     # 季封面：TMDB 季节海报 -> 主海报
     poster_rel = season_poster_rel(tv_id, tv, season)
 
@@ -1014,7 +1017,7 @@ def handle_detail_season_episode(body: dict):
     ep = int(body.get("episode") or 0)
     if ep <= 0:
         return fail(404, "not found")
-    trim = f"tm{tv_id}"
+    trim = f"tt{tv_id}"
     # 主表优先，未命中再走剧集组（与 /search/item 一致）
     e = episode_default(tv_id, season, ep)
     if e:
@@ -1054,7 +1057,7 @@ def handle_search_multi(body: dict):
     for i, r in enumerate(results):
         out.append({
             "source": "trim_id",
-            "sourceId": f"tm{r.get('id')}",
+            "sourceId": f"tt{r.get('id')}",
             "type": "tv",
             "name": r.get("name") or "",
             "posterPath": img_path(r.get("poster_path")),
@@ -1069,7 +1072,7 @@ def handle_search_multi(body: dict):
     for r in search_movie(keyword)[:10]:
         out.append({
             "source": "trim_id",
-            "sourceId": f"tm{r.get('id')}",
+            "sourceId": f"tt{r.get('id')}",
             "type": "movie",
             "name": r.get("title") or "",
             "posterPath": img_path(r.get("poster_path")),
@@ -1373,7 +1376,7 @@ def _dedupe_similar(items: list, kind: str) -> list:
 def handle_meta_images(body: dict):
     """POST /meta/images —— 飞牛"编辑元数据 → 搜索图片"弹窗数据源。
 
-    请求: {"category":"tv","language":"zh-CN","trimId":"tm65942"}
+    请求: {"category":"tv","language":"zh-CN","trimId":"tt65942"}
     响应: data = {"poster": "<裸路径>", "posters": ["<裸路径>", ...],
                   "backdrops": [...], "logos": [...]}
     posters=竖版海报（网格第一组）；backdrops=横向剧照/背景图；logos=标题 logo。
@@ -1472,7 +1475,7 @@ def handle_meta_diff(body: dict):
         e = gep
     if not e:
         return ok({"hasDiff": False})
-    episode = build_episode(f"tm{tv_id}", tv_id, e, s_num, ep_number)
+    episode = build_episode(f"tt{tv_id}", tv_id, e, s_num, ep_number)
     if cur_ver == episode.get("data_version"):
         return ok({"hasDiff": False})
     return ok({"hasDiff": True, "episode": episode})
