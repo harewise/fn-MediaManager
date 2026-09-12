@@ -165,37 +165,20 @@ IMG_CACHE_CHECK_EVERY = 24 * 3600    # 清理检查间隔（秒）
 
 _cache_lock = threading.Lock()
 
-# 刮削会话上下文：飞牛请求体里 season 是 Go int + omitempty，第 0 季（特别篇）
-# 会被整个省略（实测 /detail/tv/season 只剩 {"sourceId","language","source",
-# "isRescrap"}）。缺 season 字段 ≠ 第 1 季，按该剧最近一次 /search/item 命中的
-# 季兜底；TTL 防止很久以前的搜索残留污染后续无季请求。
-_scrape_season_ctx = {}    # tv_id -> (season, ts)
-_SEASON_CTX_TTL = 600      # 秒
 
+def _season_from_body(tv_id: int, body: dict) -> int:
+    """季号解析：显式字段（含 0）为准；字段缺席即第 0 季。
 
-def _season_ctx_record(tv_id: int, season: int):
-    with _cache_lock:
-        _scrape_season_ctx[tv_id] = (int(season), time.time())
-
-
-def _season_ctx_lookup(tv_id: int):
-    with _cache_lock:
-        hit = _scrape_season_ctx.get(tv_id)
-    if hit and time.time() - hit[1] <= _SEASON_CTX_TTL:
-        return int(hit[0])
-    return None
-
-
-def _season_from_body_or_ctx(tv_id: int, body: dict) -> int:
-    """季号解析：显式字段（含 0）为准；缺席时回退刮削上下文，仍无则 1。
+    飞牛请求体里 season/seasonNumber 是 Go int + omitempty，只有 0 值会被
+    整个省略（实测 /detail/tv/season 对 S0 只剩 {"sourceId","language",
+    "source","isRescrap"}），S1+ 恒带该字段——所以"缺字段"当且仅当第 0 季。
+    不得默认 S1（史莱姆 S0 全量重刮曾被刮成第 1 季），也不做"最近一次识别
+    的季"之类的上下文兜底（刚扫完 S4 文件时上下文会把 S0 解析成 S4）。
     字段名两套：/detail/tv/season* 用 season，meta diff 用 seasonNumber。"""
     s_raw = body.get("season")
     if s_raw is None:
         s_raw = body.get("seasonNumber")
-    if s_raw is not None:
-        return int(s_raw)
-    ctx = _season_ctx_lookup(tv_id)
-    return ctx if ctx is not None else 1
+    return int(s_raw) if s_raw is not None else 0
 
 
 def log_line(s: str):
@@ -789,7 +772,6 @@ def handle_search_item(body: dict):
     if ep:
         episode = build_episode(trim, tv_id, ep, req_season, req_episode)
         log_line(f"[search] {query}: 默认结构命中 S{req_season}E{req_episode}")
-        _season_ctx_record(tv_id, req_season)
         return ok({"cleanData": build_clean_data(tv_id), "episode": episode})
 
     # 规则2：主表无此集（整季拆分/全局集号的旧结构，如 Re:Zero S1=85 集、
@@ -798,7 +780,6 @@ def handle_search_item(body: dict):
     if gep:
         episode = build_episode(trim, tv_id, gep, s_num, req_episode)
         log_line(f"[search] {query}: 剧集组 [{gname}] 命中 S{req_season}E{req_episode} -> S{s_num}")
-        _season_ctx_record(tv_id, s_num)
         return ok({"cleanData": build_clean_data(tv_id), "episode": episode})
 
     return fail(404, "not found")
@@ -999,7 +980,7 @@ def handle_detail_season(body: dict):
     tv_id = _parse_tm_id(body.get("sourceId") or "")
     if not tv_id:
         return fail(404, "not found")
-    season = _season_from_body_or_ctx(tv_id, body)  # 缺 season ≠ S1，飞牛对 S0 不发该字段
+    season = _season_from_body(tv_id, body)  # 缺 season = 第 0 季（Go omitempty 只丢 0 值）
     tv = tv_detail(tv_id)
     if not tv:
         return fail(404, "not found")
@@ -1013,7 +994,7 @@ def handle_detail_season_episode(body: dict):
     tv_id = _parse_tm_id(body.get("sourceId") or "")
     if not tv_id:
         return fail(404, "not found")
-    season = _season_from_body_or_ctx(tv_id, body)  # 缺 season ≠ S1，飞牛对 S0 不发该字段
+    season = _season_from_body(tv_id, body)  # 缺 season = 第 0 季（Go omitempty 只丢 0 值）
     ep = int(body.get("episode") or 0)
     if ep <= 0:
         return fail(404, "not found")
@@ -1451,7 +1432,7 @@ def handle_meta_diff(body: dict):
         return ok({"hasDiff": True, "movie": {k: v for k, v in out.items() if k != "data_version"}})
 
     if cat == "season":
-        season = _season_from_body_or_ctx(tv_id, body)  # 缺 seasonNumber ≠ S1，同上按上下文兜底
+        season = _season_from_body(tv_id, body)  # 缺 seasonNumber = 第 0 季，同上
         tv = tv_detail(tv_id)
         if not tv:
             return ok({"hasDiff": False})

@@ -72,13 +72,16 @@ class TestReplay(unittest.TestCase):
         e = out["data"]["episode"]
         self.assertEqual((e["season_number"], e["episode_number"]), (3, 1))
 
-    def test_season_request_without_season_uses_scrape_context(self):
-        # 飞牛对第 0 季不发 season 字段；缺字段 ≠ S1，按 /search/item 命中的季兜底
+    def test_season_request_without_season_means_specials(self):
+        # 飞牛对第 0 季不发 season 字段（Go omitempty）；缺字段恒为 S0，
+        # 不受此前识别/扫描过什么季影响（史莱姆 S0 重刮曾被解析成 S1/S4）
         with bs.FakeTMDB():
-            tp.handle_search_item({"fileName": MUSHOKU_FILE})       # 记录上下文 S3
+            tp.handle_search_item({"fileName": MUSHOKU_FILE})       # 先识别 S3E1
             out = tp.handle_detail_season({"sourceId": "tm94664", "language": "zh-CN"})
         self.assertEqual(out["code"], 0)
-        self.assertEqual(out["data"]["season"]["season_number"], 3)
+        season = out["data"]["season"]
+        self.assertEqual(season["season_number"], 0)
+        self.assertEqual(season["name"], "特别篇")
 
     def test_detail_season_zero_named_specials(self):
         with bs.FakeTMDB():

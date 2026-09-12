@@ -112,18 +112,19 @@ class TestSeasonStructure(unittest.TestCase):
         self.assertTrue(tp.structure_source_is_main(single, 1))
 
 
-class TestSeasonCtx(unittest.TestCase):
-    def test_explicit_zero_wins_over_ctx(self):
-        # 显式 season=0（特别篇）是合法值，不能被上下文/默认 1 覆盖
+class TestSeasonFromBody(unittest.TestCase):
+    def test_explicit_season_wins(self):
+        # 显式字段（含 0）为准；字段名两套都认
         bs.reset_state()
-        tp._season_ctx_record(94664, 3)
-        self.assertEqual(tp._season_from_body_or_ctx(94664, {"season": 0}), 0)
+        self.assertEqual(tp._season_from_body(94664, {"season": 0}), 0)
+        self.assertEqual(tp._season_from_body(94664, {"season": 2}), 2)
+        self.assertEqual(tp._season_from_body(94664, {"seasonNumber": 4}), 4)
 
-    def test_missing_falls_back_to_ctx_then_1(self):
+    def test_missing_means_season_zero(self):
+        # Go omitempty 只会丢 0 值：缺字段当且仅当第 0 季，不得默认 S1
+        # （史莱姆 S0 全量重刮曾被"缺字段→默认 S1"刮成第 1 季）
         bs.reset_state()
-        self.assertEqual(tp._season_from_body_or_ctx(94664, {}), 1)
-        tp._season_ctx_record(94664, 3)
-        self.assertEqual(tp._season_from_body_or_ctx(94664, {}), 3)   # 缺 season ≠ S1
+        self.assertEqual(tp._season_from_body(94664, {}), 0)
 
 
 if __name__ == "__main__":

@@ -37,7 +37,6 @@ def reset_state(api_key="test-key"):
     tp.STATE.clear()
     tp.STATE.update(json.loads(json.dumps(_STATE_DEFAULTS)))
     tp.STATE["config"] = {"api_key": api_key}
-    tp._scrape_season_ctx.clear()
     tp._img_types_last_save[0] = 0.0
 
 
