@@ -332,16 +332,23 @@ def episode_default(tv_id: int, season: int, episode: int):
 
 
 def _fetch_flat_groups(tv_id: int) -> list:
-    """拉取并扁平化所有剧集组：[(group_name, sub_name, season_num, order, ep_dict)]（无缓存逻辑）。"""
+    """拉取并扁平化所有剧集组：[(group_name, sub_name, season_num, order, ep_dict)]（无缓存逻辑）。
+    同名剧集组只保留集数最多的一个（TMDB 常有新旧两组同名，如咒术回战两个
+    "Seasons" 64/69 集，混用会把季集数翻倍）。"""
     d = tmdb_get(f"/tv/{tv_id}/episode_groups")
     out = []
     if tmdb_ok(d):
+        best = {}   # gname -> (detail, 总集数)
         for grp in d.get("results") or []:
             gid = grp.get("id")
             gname = grp.get("name") or ""
             detail = tmdb_get(f"/tv/episode_group/{gid}")
             if not tmdb_ok(detail):
                 continue
+            total = sum(len(sub.get("episodes") or []) for sub in detail.get("groups") or [])
+            if gname not in best or total > best[gname][1]:
+                best[gname] = (detail, total)
+        for gname, (detail, _total) in best.items():
             for sub in detail.get("groups") or []:
                 subname = sub.get("name") or ""
                 # 子组名 -> 飞牛季号

@@ -127,5 +127,30 @@ class TestSeasonFromBody(unittest.TestCase):
         self.assertEqual(tp._season_from_body(94664, {}), 0)
 
 
+class TestFlatGroupsSameNameDedupe(unittest.TestCase):
+    def test_same_name_groups_keep_largest(self):
+        # TMDB 常有同名新旧剧集组（如咒术回战两个 "Seasons" 64/69 集），
+        # 展平必须按组名去重取集数最多的，否则季集数翻倍
+        bs.reset_state()
+
+        def fake_get(path, **kw):
+            if path.endswith("episode_groups"):
+                return {"results": [{"id": "A", "name": "Seasons"},
+                                    {"id": "B", "name": "Seasons"}]}
+            if path == "/tv/episode_group/A":
+                return {"groups": [{"name": "Season 1", "episodes":
+                                    [{"episode_number": 1}, {"episode_number": 2}]}]}
+            if path == "/tv/episode_group/B":
+                return {"groups": [{"name": "Season 1", "episodes":
+                                    [{"episode_number": 1}, {"episode_number": 2},
+                                     {"episode_number": 3}]}]}
+            return {"_status": 404}
+
+        with mock.patch.object(tp, "tmdb_get", side_effect=fake_get):
+            flat = tp._fetch_flat_groups(1)
+        self.assertEqual(len(flat), 3)
+        self.assertEqual(sorted(e["episode_number"] for e in flat), [1, 2, 3])
+
+
 if __name__ == "__main__":
     unittest.main()
