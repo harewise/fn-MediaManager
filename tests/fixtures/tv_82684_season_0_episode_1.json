@@ -1,0 +1,69 @@
+{
+ "air_date": "2019-03-26",
+ "crew": [],
+ "episode_number": 1,
+ "episode_type": "standard",
+ "guest_stars": [
+  {
+   "character": "Rimuru (voice)",
+   "credit_id": "5bb0e837c3a36814c7018322",
+   "order": 0,
+   "adult": false,
+   "gender": 1,
+   "id": 2138490,
+   "known_for_department": "Acting",
+   "name": "冈咲美保",
+   "original_name": "岡咲美保",
+   "popularity": 1.3841,
+   "profile_path": "/6vxRulNZRaW47UFvVEq9poRekUx.jpg"
+  },
+  {
+   "character": "Daikenja (voice)",
+   "credit_id": "5c7f37b09251412769182f85",
+   "order": 1,
+   "adult": false,
+   "gender": 1,
+   "id": 9710,
+   "known_for_department": "Acting",
+   "name": "丰口惠美",
+   "original_name": "豊口めぐみ",
+   "popularity": 1.1969,
+   "profile_path": "/qrnzkvoaODEplqhtkcyDgUa3Qtp.jpg"
+  },
+  {
+   "character": "Veldora (voice)",
+   "credit_id": "5c7f4951925141276f1820b4",
+   "order": 4,
+   "adult": false,
+   "gender": 2,
+   "id": 1249235,
+   "known_for_department": "Acting",
+   "name": "前野智昭",
+   "original_name": "前野智昭",
+   "popularity": 1.4461,
+   "profile_path": "/w3lEuXSbEyzzNyO3YnxsF6wm2N5.jpg"
+  },
+  {
+   "character": "Ifrit (voice)",
+   "credit_id": "61135af1a4af8f002d5fff15",
+   "order": 622,
+   "adult": false,
+   "gender": 2,
+   "id": 1613379,
+   "known_for_department": "Acting",
+   "name": "八代拓",
+   "original_name": "八代拓",
+   "popularity": 1.5141,
+   "profile_path": "/eVdB6myaNJ4h38UU9hHHlsaCWHn.jpg"
+  }
+ ],
+ "name": "第24.5话 闲话：维鲁多拉日记",
+ "overview": "总集篇， 收录于Blu-ray&DVD Vol.4 映像特典\n\n被吞进利姆路体内的伊芙利特。恢复意识后，发现自己站在暴风龙维尔德拉的面前——。维尔德拉把伊芙利特诱导到了自己所在的地方，想让他做自己的聊天对象。就这样，维尔德拉与伊芙利特在利姆路体内注视著他的行动。让我们以维尔德拉与伊芙利特的视角，回顾一次正篇发生的事情。",
+ "id": 1739826,
+ "production_code": "0",
+ "runtime": 24,
+ "season_number": 0,
+ "still_path": "/xNGKCIbKI32iUo3vTKzZoulLCum.jpg",
+ "vote_average": 5.8,
+ "vote_count": 6
+}

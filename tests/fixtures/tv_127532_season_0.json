@@ -1,0 +1,30 @@
+{
+ "_id": "65d1df89aa659e018643991b",
+ "air_date": "2024-02-25",
+ "episodes": [
+  {
+   "air_date": "2024-02-25",
+   "episode_number": 1,
+   "episode_type": "standard",
+   "id": 5153225,
+   "name": "如何变强",
+   "overview": "被称为『人类最弱武器』的年轻人迈出了「成为更强大」的一步。回顾了从第1集到第7集的内容，并配有新录制的角色旁白。",
+   "production_code": "",
+   "runtime": 24,
+   "season_number": 0,
+   "show_id": 127532,
+   "still_path": "/7OEMEVIQQevzH8HzrDHpxfvpmvY.jpg",
+   "vote_average": 6.0,
+   "vote_count": 9,
+   "crew": [],
+   "guest_stars": []
+  }
+ ],
+ "name": "特别篇",
+ "networks": [],
+ "overview": "",
+ "id": 379694,
+ "poster_path": "/hUQRnwRuVtz0CRZhUiOA26gXRoU.jpg",
+ "season_number": 0,
+ "vote_average": 0.0
+}

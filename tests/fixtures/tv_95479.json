@@ -1,0 +1,300 @@
+{
+ "adult": false,
+ "backdrop_path": "/qpin8cASXEVtwhzNsprHYFiOAGk.jpg",
+ "created_by": [],
+ "episode_run_time": [
+  24
+ ],
+ "first_air_date": "2020-10-03",
+ "genres": [
+  {
+   "id": 16,
+   "name": "动画"
+  },
+  {
+   "id": 10765,
+   "name": "Sci-Fi & Fantasy"
+  },
+  {
+   "id": 10759,
+   "name": "动作冒险"
+  }
+ ],
+ "homepage": "https://jujutsukaisen.jp",
+ "id": 95479,
+ "in_production": true,
+ "languages": [
+  "ja"
+ ],
+ "last_air_date": "2026-03-27",
+ "last_episode_to_air": {
+  "id": 6827074,
+  "name": "仙台结界",
+  "overview": "踏入仙台结界的乙骨，率先斩落了四强割据格局中的一角——多鲁布·拉克达瓦拉。受此影响，原本处于休眠状态的黑沐死苏醒并开始行动。面对袭击普通人的黑沐死，乙骨挺身对峙。与此同时，另外两名强者石流龙与乌鹭亨子也正密切注视着战局。集结了古代术师与特级咒灵的这场极度惨烈的混战，其结局究竟是……",
+  "vote_average": 7.0,
+  "vote_count": 23,
+  "air_date": "2026-03-27",
+  "episode_number": 59,
+  "episode_type": "finale",
+  "production_code": "",
+  "runtime": 29,
+  "season_number": 1,
+  "show_id": 95479,
+  "still_path": "/3A5kRJKO3ziU0cBVMBjzaaEhvSD.jpg"
+ },
+ "name": "咒术回战",
+ "next_episode_to_air": null,
+ "networks": [
+  {
+   "id": 94,
+   "logo_path": "/7RNXnyiMbjgqtPAjja13wchcrGI.png",
+   "name": "MBS",
+   "origin_country": "JP"
+  },
+  {
+   "id": 160,
+   "logo_path": "/lUACMATs6jcscXIrzNCQzbvNVN5.png",
+   "name": "TBS",
+   "origin_country": "JP"
+  },
+  {
+   "id": 201,
+   "logo_path": "/qNooLje0YQh1y3y9LUM2Y5QCtiF.png",
+   "name": "CBC",
+   "origin_country": "JP"
+  },
+  {
+   "id": 896,
+   "logo_path": "/qfUzYnpnN5bnd2bqGUH0OlAMell.png",
+   "name": "Tulip Television",
+   "origin_country": "JP"
+  },
+  {
+   "id": 1559,
+   "logo_path": "/artkCykJgOAh6lAjfrNNgANasgk.png",
+   "name": "SBC",
+   "origin_country": "JP"
+  },
+  {
+   "id": 2460,
+   "logo_path": "/34sNEcsgcTAuDidRMrgxdfNyVjL.png",
+   "name": "BSN",
+   "origin_country": "JP"
+  },
+  {
+   "id": 2461,
+   "logo_path": "/b4Ivxqz6UY0EogjYc09Y22ctC6F.png",
+   "name": "tys",
+   "origin_country": "JP"
+  },
+  {
+   "id": 2462,
+   "logo_path": "/7zXfwh5ZhFqvdOWgWX80weU6Sqb.png",
+   "name": "NBC",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3658,
+   "logo_path": "/sJwRsE1lfMwAwYZi1OtRfn7V03t.png",
+   "name": "HBC",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3705,
+   "logo_path": "/zOgixhlAa61yUb32bsXvRtD63wI.png",
+   "name": "RKK",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3969,
+   "logo_path": "/nhCsLIGjzIIp6jIFCdHN0cQEzjP.png",
+   "name": "i-Television",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3970,
+   "logo_path": "/9coKtCf4jSNCdSqGveVFyzvjrZt.png",
+   "name": "SBS",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3971,
+   "logo_path": "/6bhZ2SWdYTbSTQf8Bhmf1q0aBef.png",
+   "name": "IBC",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3972,
+   "logo_path": "/rL2IlndcEiQnIbym5EoSEM7rGlx.png",
+   "name": "BSS",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3973,
+   "logo_path": "/dh4E8hGvqD9Xqu51kbqUU06UKbt.png",
+   "name": "MRO",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3974,
+   "logo_path": "/yMQxsmGs88q54bslmcSeXlmpObC.png",
+   "name": "OBS",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3975,
+   "logo_path": "/6ACZlk44MWsIIwYHxjRGXGKlpRb.png",
+   "name": "TUF",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3977,
+   "logo_path": "/sGMMrdCmptaLLwJX7CsXTDaduLO.png",
+   "name": "RSK",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3978,
+   "logo_path": "/zOz9LK6WWLUWGuG0fthzDzCIXlA.png",
+   "name": "TUY",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3979,
+   "logo_path": "/yWlWHPUn6FHjNUulL1vp8croYFw.png",
+   "name": "tbc",
+   "origin_country": "JP"
+  },
+  {
+   "id": 4748,
+   "logo_path": "/o5Hlt7ZXJPEm4Qrx2Pl2rtc9A5y.png",
+   "name": "RKB",
+   "origin_country": "JP"
+  },
+  {
+   "id": 4792,
+   "logo_path": "/8kzeHaKeW3gZubs3cqlGWFvfJI7.png",
+   "name": "KUTV",
+   "origin_country": "JP"
+  },
+  {
+   "id": 4859,
+   "logo_path": "/6jr76BpIItwLV5oKbZmRJsVh3c6.png",
+   "name": "RBC",
+   "origin_country": "JP"
+  },
+  {
+   "id": 6171,
+   "logo_path": "/ekXN1cfYutjLfudy1MKyGzNynEa.png",
+   "name": "UTY",
+   "origin_country": "JP"
+  },
+  {
+   "id": 6172,
+   "logo_path": "/mKslL0MTHHt9ukugWOv3Vh8Tn0E.png",
+   "name": "RCC",
+   "origin_country": "JP"
+  },
+  {
+   "id": 6173,
+   "logo_path": "/YfewT1YYtAqkgvdu8oCX4mnJCs.png",
+   "name": "MRT",
+   "origin_country": "JP"
+  },
+  {
+   "id": 6174,
+   "logo_path": "/aawphEBuBGT9RVP6xG3BZV8NOCw.png",
+   "name": "ATV",
+   "origin_country": "JP"
+  },
+  {
+   "id": 6175,
+   "logo_path": "/iaaU6q82URj2mBbjQIbfAMUz14J.png",
+   "name": "MBC",
+   "origin_country": "JP"
+  }
+ ],
+ "number_of_episodes": 59,
+ "number_of_seasons": 1,
+ "origin_country": [
+  "JP"
+ ],
+ "original_language": "ja",
+ "original_name": "呪術廻戦",
+ "overview": "少年战斗着——「为寻求正确的死亡」。辛酸·后悔·耻辱人类产生的负面情感，化为诅咒，潜入日常生活诅咒是蔓延于世界的祸源，最糟糕的情况下，会让人类踏入死亡，并且诅咒只能以诅咒祓除。虎杖悠仁是一位体育万能的高中生，某天他为了从“咒物”危机中解救学姐，而吞下了被诅咒的手指“两面宿傩之指”，让“宿傩”这种诅咒跟自己合而为一。在最强咒术师五条悟的指引下，进入对诅咒专门机关「东京都立咒术高等专门学校」，并遇到了伏黑惠与钉崎野蔷薇这两位同学。某日，突然出现“特级咒物”，他们三人就奉命到现场支援。为了实现爷爷要他“助人”的遗言，虎杖将会继续与“诅咒”奋斗下去。为了祓除诅咒而成为诅咒的少年，无法回头的壮阔故事开始了——",
+ "popularity": 68.4286,
+ "poster_path": "/kdE1ALF5G6DFMyDU67AyyUklEtn.jpg",
+ "production_companies": [
+  {
+   "id": 21444,
+   "logo_path": "/wSejGn3lAZdQ5muByxvzigwyDY6.png",
+   "name": "MAPPA",
+   "origin_country": "JP"
+  },
+  {
+   "id": 158200,
+   "logo_path": "/rf4ZArxPuqx5hdeU7rPIU8IQlYx.png",
+   "name": "Sumzap",
+   "origin_country": "JP"
+  },
+  {
+   "id": 2918,
+   "logo_path": "/gyEWUBWwqrm3H5T2hkERD9LxpOq.png",
+   "name": "Shueisha",
+   "origin_country": "JP"
+  },
+  {
+   "id": 3363,
+   "logo_path": "/sj3vD7n63bTCih7bcf6GnWvRf1Q.png",
+   "name": "MBS",
+   "origin_country": "JP"
+  },
+  {
+   "id": 882,
+   "logo_path": "/fRSWWjquvzcHjACbtF53utZFIll.png",
+   "name": "TOHO",
+   "origin_country": "JP"
+  }
+ ],
+ "production_countries": [
+  {
+   "iso_3166_1": "JP",
+   "name": "Japan"
+  }
+ ],
+ "seasons": [
+  {
+   "air_date": "2021-01-08",
+   "episode_count": 10,
+   "id": 175591,
+   "name": "特别篇",
+   "overview": "",
+   "poster_path": "/a4yNX9Czn32SxOf5fmKm4bgXwEQ.jpg",
+   "season_number": 0,
+   "vote_average": 0.0
+  },
+  {
+   "air_date": "2020-10-03",
+   "episode_count": 59,
+   "id": 135856,
+   "name": "第 1 季",
+   "overview": "天地玄黄，森罗万象。拥有复杂情感的人类，无法想象自己会孕育出怎样恐怖阴森的存在。其实往往是简简单单的负面情绪，便可形成无法祓除、难以追悔的诅咒。17岁的高中生虎杖悠仁是一个优哉游哉的体育特长生，只因他偶然捡到了一个被布条包裹的手指，便从此打开异世界的大门。为了解救同学，他吞下这根“两面宿傩之指”，于是便和特级咒物融为一体。在最强咒术师五条悟的帮助下，虎杖进入东京都立咒术高等专门学校学习。由此开启了自己险象环生、波澜壮阔的咒术师之旅……\n\n本片根据日本漫画家芥见下下著作的漫画作品改编。",
+   "poster_path": "/7Wa0N9bmUznYQzzNAdTAN0OgQ1w.jpg",
+   "season_number": 1,
+   "vote_average": 8.1
+  }
+ ],
+ "softcore": false,
+ "spoken_languages": [
+  {
+   "english_name": "Japanese",
+   "iso_639_1": "ja",
+   "name": "日本語"
+  }
+ ],
+ "status": "Returning Series",
+ "tagline": "一个男孩为“正确的死亡”而战。",
+ "type": "Scripted",
+ "vote_average": 8.579,
+ "vote_count": 4647
+}

@@ -1,0 +1,99 @@
+{
+ "description": "",
+ "episode_count": 5,
+ "group_count": 1,
+ "groups": [
+  {
+   "id": "63d6c30622df2e00843a7d91",
+   "name": "OAD",
+   "order": 1,
+   "episodes": [
+    {
+     "air_date": "2019-07-09",
+     "episode_number": 2,
+     "episode_type": "standard",
+     "id": 1846591,
+     "name": "OAD#1 外传：HEY！屁股！",
+     "overview": "收录于漫画第12卷(DVD付限定版)，后于关于我转生变成史莱姆这档事 OAD Series Blu-ray中BD化\n\n由于史莱姆的身体无法入睡，利姆路尝试使用培斯塔制作的安眠药，于是乎，他梦见他把相扑带到了朱拉·坦派斯特联邦国...",
+     "production_code": "",
+     "runtime": 23,
+     "season_number": 0,
+     "show_id": 82684,
+     "still_path": "/aUGz1r826viF80LAkCHAuWMD0K9.jpg",
+     "vote_average": 6.9,
+     "vote_count": 8,
+     "order": 0
+    },
+    {
+     "air_date": "2019-12-04",
+     "episode_number": 3,
+     "episode_type": "standard",
+     "id": 1846592,
+     "name": "OAD#2 外传：M的悲剧？",
+     "overview": "收录于漫画第13卷(DVD付限定版)，后于关于我转生变成史莱姆这档事 OAD Series Blu-ray中BD化\n\n有一天，朱菜和紫苑如往常一般在争抢利姆路的史莱姆身体，利姆路突然想到可以做一个史莱姆造型的枕头代替。于是他在朱拉·坦派斯特联邦国四处探寻，找到湖边的某种材料可以使用，但是那裡却有个怪物在等著他...",
+     "production_code": "",
+     "runtime": 23,
+     "season_number": 0,
+     "show_id": 82684,
+     "still_path": "/vb3JJeYgsHXnGLsnsYjBX3I1oLN.jpg",
+     "vote_average": 7.1,
+     "vote_count": 8,
+     "order": 1
+    },
+    {
+     "air_date": "2020-03-27",
+     "episode_number": 4,
+     "episode_type": "standard",
+     "id": 2202256,
+     "name": "OAD#3 外传：利姆露的华丽教师生活 其一",
+     "overview": "收录于漫画第14卷(DVD付限定版)，后于关于我转生变成史莱姆这档事 OAD Series Blu-ray中BD化\n\n利姆路在挽救了学生的生命后，享受了一段休息时间，但另一位老师却对他的班级发起新的挑战...",
+     "production_code": "",
+     "runtime": 24,
+     "season_number": 0,
+     "show_id": 82684,
+     "still_path": "/2KG4zqiMkIYSjuQDv8L2JGZJTXi.jpg",
+     "vote_average": 8.1,
+     "vote_count": 8,
+     "order": 2
+    },
+    {
+     "air_date": "2020-07-09",
+     "episode_number": 5,
+     "episode_type": "standard",
+     "id": 2203453,
+     "name": "OAD#4 外传：利姆露华丽的教师生活 其二",
+     "overview": "收录于漫画第15卷(DVD付限定版)，后于关于我转生变成史莱姆这档事 OAD Series Blu-ray中BD化",
+     "production_code": "",
+     "runtime": 23,
+     "season_number": 0,
+     "show_id": 82684,
+     "still_path": "/fhSY1CrbhPEjgU9SfW7WiUNA4cZ.jpg",
+     "vote_average": 8.1,
+     "vote_count": 7,
+     "order": 3
+    },
+    {
+     "air_date": "2020-11-27",
+     "episode_number": 6,
+     "episode_type": "standard",
+     "id": 2203454,
+     "name": "OAD#5 外传：利姆露华丽的教师生活 其三",
+     "overview": "收录于漫画第16卷(DVD付限定版)，后于关于我转生变成史莱姆这档事 OAD Series Blu-ray中BD化",
+     "production_code": "",
+     "runtime": 23,
+     "season_number": 0,
+     "show_id": 82684,
+     "still_path": "/yEDbZyXy5IisJXVLIMsX0V0QkZK.jpg",
+     "vote_average": 8.0,
+     "vote_count": 7,
+     "order": 4
+    }
+   ],
+   "locked": false
+  }
+ ],
+ "id": "63d6c1dec15b5500d0893ec0",
+ "name": "OAD Limited Edition Blu-ray (Japan)",
+ "network": null,
+ "type": 3
+}

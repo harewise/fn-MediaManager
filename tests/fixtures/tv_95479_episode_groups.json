@@ -1,0 +1,59 @@
+{
+ "results": [
+  {
+   "description": "",
+   "episode_count": 59,
+   "group_count": 3,
+   "id": "69be1c7638042a2e610e2852",
+   "name": "Italian Parts",
+   "network": null,
+   "type": 4
+  },
+  {
+   "description": "",
+   "episode_count": 48,
+   "group_count": 7,
+   "id": "6346a813f3b49a007c95a105",
+   "name": "Story Arcs",
+   "network": null,
+   "type": 5
+  },
+  {
+   "description": "",
+   "episode_count": 69,
+   "group_count": 4,
+   "id": "69be0e38375d5b92060e2827",
+   "name": "Saga Española",
+   "network": null,
+   "type": 5
+  },
+  {
+   "description": "",
+   "episode_count": 64,
+   "group_count": 4,
+   "id": "64a3fc4fe9da6900ae2fa807",
+   "name": "Seasons",
+   "network": null,
+   "type": 6
+  },
+  {
+   "description": "",
+   "episode_count": 59,
+   "group_count": 3,
+   "id": "6961c83d72e76980b8bd3780",
+   "name": "季",
+   "network": null,
+   "type": 6
+  },
+  {
+   "description": "",
+   "episode_count": 69,
+   "group_count": 4,
+   "id": "6a6495cf8020f8fcaabac062",
+   "name": "Seasons",
+   "network": null,
+   "type": 6
+  }
+ ],
+ "id": 95479
+}

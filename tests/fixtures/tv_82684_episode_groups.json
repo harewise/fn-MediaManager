@@ -1,0 +1,50 @@
+{
+ "results": [
+  {
+   "description": "Absolute ordering places all episodes in a single ordered season. This is generally used for anime.",
+   "episode_count": 111,
+   "group_count": 2,
+   "id": "6023429b0e597b003fa7660b",
+   "name": "Absolute Order",
+   "network": null,
+   "type": 2
+  },
+  {
+   "description": "",
+   "episode_count": 5,
+   "group_count": 1,
+   "id": "63d6c1dec15b5500d0893ec0",
+   "name": "OAD Limited Edition Blu-ray (Japan)",
+   "network": null,
+   "type": 3
+  },
+  {
+   "description": "",
+   "episode_count": 51,
+   "group_count": 8,
+   "id": "63d6c375955c65008479957e",
+   "name": "Limited Edition Blu-rays (Japan)",
+   "network": null,
+   "type": 3
+  },
+  {
+   "description": "All episodes organized by production season.  Includes specials as season 0.",
+   "episode_count": 111,
+   "group_count": 5,
+   "id": "680e4d475b2ebd5b95380e71",
+   "name": "All Episodes by Season",
+   "network": null,
+   "type": 6
+  },
+  {
+   "description": "",
+   "episode_count": 1,
+   "group_count": 2,
+   "id": "658075470e64af0876a83d7d",
+   "name": "Season 3 Cours",
+   "network": null,
+   "type": 7
+  }
+ ],
+ "id": 82684
+}

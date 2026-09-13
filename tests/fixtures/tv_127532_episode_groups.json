@@ -1,0 +1,23 @@
+{
+ "results": [
+  {
+   "description": "This episode group adds the 7.5 recap episode to the first season.",
+   "episode_count": 26,
+   "group_count": 2,
+   "id": "65d3916b51c01f017cc1a724",
+   "name": "Air Date",
+   "network": null,
+   "type": 1
+  },
+  {
+   "description": "",
+   "episode_count": 25,
+   "group_count": 2,
+   "id": "67786ddbc11ee61dd874bc97",
+   "name": "Seasons",
+   "network": null,
+   "type": 6
+  }
+ ],
+ "id": 127532
+}

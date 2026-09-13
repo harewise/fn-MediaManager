@@ -1,0 +1,42 @@
+{
+ "description": "",
+ "episode_count": 1,
+ "group_count": 2,
+ "groups": [
+  {
+   "id": "65807558ac617c0872153d73",
+   "name": "Cour 1",
+   "order": 1,
+   "episodes": [
+    {
+     "air_date": "2024-04-05",
+     "episode_number": 1,
+     "episode_type": "standard",
+     "id": 5008321,
+     "name": "恶魔与策略",
+     "overview": "在与克雷曼的战斗中赢得胜利，并成为名副其实的魔王后，利姆路以八星魔王一员的身份继续参加魔王盛宴。 接着，在最古老的魔王之一金所主办的餐会中，与其他魔王一起用餐之后，利姆路回到了同伴们正等待着他归来的坦派斯特。 而在充满喜悦的坦派斯特的居民中，却有应该被交代负责攻略法尔姆斯王国的迪亚布罗的身影。 根据他的说法，他以相当单方面的蛮横手段逼迫对方签订求和条约。 究竟这个恶魔安排的计谋之全貌为何呢？",
+     "production_code": "",
+     "runtime": 24,
+     "season_number": 3,
+     "show_id": 82684,
+     "still_path": "/qGdvJCuZLL3XTlaVcokjmjOYwVT.jpg",
+     "vote_average": 7.8,
+     "vote_count": 16,
+     "order": 0
+    }
+   ],
+   "locked": false
+  },
+  {
+   "id": "6580755f0e64af0876a83d83",
+   "name": "Cour 2",
+   "order": 2,
+   "episodes": [],
+   "locked": false
+  }
+ ],
+ "id": "658075470e64af0876a83d7d",
+ "name": "Season 3 Cours",
+ "network": null,
+ "type": 7
+}

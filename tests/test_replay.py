@@ -4,6 +4,9 @@
   - Re:Zero tm65942：主表 S1=85 集全局号，S4E81 只在剧集组
   - 无职转生 tm94664：新播季 S3 只在主表、S0 特别篇、刮削季上下文
   - 让子弹飞 tm51533：电影 hash 识别（文件名匹配）
+  - 咒术回战 tm95479：主表 S1=59 塞三季，同名 "Seasons" 组去重后按组拆季
+  - 我独自升级 tm127532：主表 S1=25 塞两季，剧集组拆 Season 1/2
+  - 史莱姆 tm82684：多季 + S0 特别篇；缺 season 字段恒为 S0
 """
 import unittest
 
@@ -18,6 +21,16 @@ MUSHOKU_S0_EP = {"dataVersion": "", "category": "episode", "language": "zh-CN",
                  "trimId": "tm94664", "seasonNumber": 0, "episodeNumber": 1}
 MUSHOKU_FILE = "/media/tv/无职转生 (2021)/Season 3/无职转生 III S03E01.mkv"
 MOVIE_FILE = "/media/movie/让子弹飞 (2010)/让子弹飞 (2010) 1080p.mkv"
+JJK_TV = {"dataVersion": "", "category": "tv", "language": "zh-CN",
+          "trimId": "tm95479"}
+JJK_FILE = "/media/tv/咒术回战/Season 2/咒术回战 S02E01.mp4"
+SOLO_TV = {"dataVersion": "", "category": "tv", "language": "zh-CN",
+           "trimId": "tm127532"}
+SOLO_FILE = "/media/tv/我独自升级 (2024)/Season 2/我独自升级 (2024) S02E13.mkv"
+SLIME_TV = {"dataVersion": "", "category": "tv", "language": "zh-CN",
+            "trimId": "tm82684"}
+SLIME_EP_NO_SEASON = {"dataVersion": "", "category": "episode", "language": "zh-CN",
+                      "trimId": "tm82684", "episodeNumber": 1}
 
 
 class TestReplay(unittest.TestCase):
@@ -107,6 +120,71 @@ class TestReplay(unittest.TestCase):
             out = tp.handle_search_by_hash({"thirdPartyHash": "abc",
                                             "fileName": "/x/zzz unknown thing 2023.mkv"})
         self.assertEqual(out["code"], 404)
+
+    # ---- 咒术回战：主表 S1=59 塞三季；同名剧集组去重后按组拆季 ----
+
+    def test_jjk_structure_from_group_not_crammed_main(self):
+        # 主表只有 S1=59；同名 "Seasons" 组（64/69 集两个）去重后按组出
+        # S0/S1/S2/S3 结构，季行集数不得被两个组的数据叠加翻倍
+        with bs.FakeTMDB():
+            out = tp.handle_meta_diff(dict(JJK_TV))
+        tv = out["data"]["tv"]
+        counts = {s["season_number"]: s["episode_count"] for s in tv["seasons"]}
+        self.assertEqual(counts.get(0), 10)
+        self.assertEqual(counts.get(1), 24)
+        self.assertEqual(counts.get(2), 23)
+        self.assertEqual(counts.get(3), 12)
+
+    def test_jjk_s02e01_matched_via_group(self):
+        # 改名后的文件（组 Season 2 E1 = 原 1x25）必须命中《怀玉》
+        with bs.FakeTMDB():
+            out = tp.handle_search_item({"fileName": JJK_FILE})
+        self.assertEqual(out["code"], 0)
+        e = out["data"]["episode"]
+        self.assertEqual((e["season_number"], e["episode_number"]), (2, 1))
+        self.assertEqual(e["name"], "怀玉")
+
+    # ---- 我独自升级：主表 S1=25 塞两季；剧集组拆 Season 1/2（保留原集号） ----
+
+    def test_solo_structure_split_by_group(self):
+        with bs.FakeTMDB():
+            out = tp.handle_meta_diff(dict(SOLO_TV))
+        counts = {s["season_number"]: s["episode_count"]
+                  for s in out["data"]["tv"]["seasons"]}
+        self.assertEqual(counts.get(1), 12)
+        self.assertEqual(counts.get(2), 13)
+
+    def test_solo_s02e13_matched_via_group(self):
+        # 组 Season 2 保留原集号 E13~25，改名后的文件必须命中《你不是E级，对吧》
+        with bs.FakeTMDB():
+            out = tp.handle_search_item({"fileName": SOLO_FILE})
+        self.assertEqual(out["code"], 0)
+        e = out["data"]["episode"]
+        self.assertEqual((e["season_number"], e["episode_number"]), (2, 13))
+        self.assertEqual(e["name"], "你不是E级，对吧")
+
+    # ---- 史莱姆：多季 + S0；缺 season 字段恒为 S0 ----
+
+    def test_slime_multi_season_structure(self):
+        with bs.FakeTMDB():
+            out = tp.handle_meta_diff(dict(SLIME_TV))
+        counts = {s["season_number"]: s["episode_count"]
+                  for s in out["data"]["tv"]["seasons"]}
+        self.assertEqual(counts.get(0), 16)
+        self.assertEqual(counts.get(1), 24)
+        self.assertEqual(counts.get(4), 24)
+
+    def test_slime_missing_season_fields_resolves_specials(self):
+        # 线上事故回归：纯刷新/重刮流程里 S0 的季详情与单集请求都不带季字段，
+        # 旧逻辑上下文过期后默认 S1，把特别篇整季刮成第 1 季
+        with bs.FakeTMDB():
+            season = tp.handle_detail_season({"sourceId": "tm82684",
+                                              "language": "zh-CN"})["data"]["season"]
+            self.assertEqual((season["season_number"], season["name"]), (0, "特别篇"))
+            out = tp.handle_meta_diff(dict(SLIME_EP_NO_SEASON))
+        e = out["data"]["episode"]
+        self.assertEqual((e["season_number"], e["episode_number"]), (0, 1))
+        self.assertIn("维鲁多拉日记", e["name"])
 
 
 if __name__ == "__main__":

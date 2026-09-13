@@ -1,0 +1,52 @@
+{
+ "page": 1,
+ "results": [
+  {
+   "adult": false,
+   "backdrop_path": "/xMNH87maNLt9n2bMDYeI6db5VFm.jpg",
+   "genre_ids": [
+    16,
+    10759,
+    10765
+   ],
+   "id": 127532,
+   "origin_country": [
+    "JP"
+   ],
+   "original_language": "ja",
+   "original_name": "俺だけレベルアップな件",
+   "overview": "10年前，世界与其他次元链接的“门”被打开，各种魔物不断出现，于是乎能力各异的猎魔者也随之出现，被称为“猎人”。程肖宇(成振宇)是一名实力最弱的E级猎人，在一次挑战任务中，遇到了可怕的隐藏挑战。生死存亡之际，他居然获得了升级系统！在系统的利用下，他能成为最强猎人吗？",
+   "popularity": 44.5434,
+   "poster_path": "/9vAmQQD1Ewus7kqwsGgeoM7sjE6.jpg",
+   "first_air_date": "2024-01-07",
+   "softcore": false,
+   "name": "我独自升级",
+   "vote_average": 8.68,
+   "vote_count": 1979
+  },
+  {
+   "adult": false,
+   "backdrop_path": null,
+   "genre_ids": [
+    10759,
+    10765
+   ],
+   "id": 295389,
+   "origin_country": [
+    "KR"
+   ],
+   "original_language": "ko",
+   "original_name": "나 혼자만 레벨업",
+   "overview": "本剧改编自同名网漫，讲述了在保护现实世界免受传送门彼端怪物侵害的“猎人”中，被称为“最弱兵器”的E级猎人成振宇（边佑锡 饰），在濒死危机中觉醒，并升级为拯救世界的“最强猎人”的故事。",
+   "popularity": 5.0295,
+   "poster_path": null,
+   "first_air_date": "",
+   "softcore": false,
+   "name": "我独自升级",
+   "vote_average": 0.0,
+   "vote_count": 0
+  }
+ ],
+ "total_pages": 1,
+ "total_results": 2
+}

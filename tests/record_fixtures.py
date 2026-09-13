@@ -94,4 +94,39 @@ show("byHash", tp.handle_search_by_hash({"thirdPartyHash": "record-only",
 
 # ---- 场景4：genres ----
 tp.handle_genres()
+
+# ---- 场景5：咒术回战 —— 主表 S1=59 塞三季；两个同名 "Seasons" 组，去重后按组拆 S1/S2/S3 ----
+print("== 咒术回战 同名剧集组 ==")
+hits = tp.search_tv("咒术回战")
+pick = tp.pick_tv(hits, "咒术回战", 2020)
+jjk = int(pick["id"])
+print("  咒术回战 -> tm%d (%s)" % (jjk, pick.get("first_air_date")))
+show("tv", tp.handle_meta_diff({"dataVersion": "", "category": "tv",
+     "language": "zh-CN", "trimId": f"tm{jjk}"}))
+show("search S02E01", tp.handle_search_item({"fileName":
+     "/media/tv/咒术回战/Season 2/咒术回战 S02E01.mp4"}))
+
+# ---- 场景6：我独自升级 —— 主表 S1=25 塞两季，剧集组拆 Season 1/2（组内保留原集号） ----
+print("== 我独自升级 主表塞两季 ==")
+hits = tp.search_tv("我独自升级")
+pick = tp.pick_tv(hits, "我独自升级", 2024)
+solo = int(pick["id"])
+print("  我独自升级 -> tm%d (%s)" % (solo, pick.get("first_air_date")))
+show("tv", tp.handle_meta_diff({"dataVersion": "", "category": "tv",
+     "language": "zh-CN", "trimId": f"tm{solo}"}))
+show("search S02E13", tp.handle_search_item({"fileName":
+     "/media/tv/我独自升级 (2024)/Season 2/我独自升级 (2024) S02E13.mkv"}))
+
+# ---- 场景7：史莱姆 —— 多季 + S0 特别篇；缺 season 字段恒为 S0 ----
+print("== 史莱姆 多季/S0 ==")
+hits = tp.search_tv("关于我转生变成史莱姆这档事")
+pick = tp.pick_tv(hits, "关于我转生变成史莱姆这档事", 2018)
+slime = int(pick["id"])
+print("  史莱姆 -> tm%d (%s)" % (slime, pick.get("first_air_date")))
+show("tv", tp.handle_meta_diff({"dataVersion": "", "category": "tv",
+     "language": "zh-CN", "trimId": f"tm{slime}"}))
+show("season 缺season字段", tp.handle_detail_season({"sourceId": f"tm{slime}", "language": "zh-CN"}))
+show("ep 缺seasonNumber字段", tp.handle_meta_diff({"dataVersion": "", "category": "episode",
+     "language": "zh-CN", "trimId": f"tm{slime}", "episodeNumber": 1}))
+
 print("完成。fixture 目录:", bs.FIXTURE_DIR)
