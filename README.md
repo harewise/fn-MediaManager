@@ -44,20 +44,20 @@ curl -s http://127.0.0.1:38080/healthz      # {"code":0,...} 即正常
 | — | `tmdb_base` / `img_base` | TMDB 官方 | API/图片源地址，仅配置文件可改，一般不用动 |
 | — | `img_original_size` | `false` | `true` 时图片代理不降尺寸，始终取原图 |
 
-## 接入 trim-media（service-setup 写死版）
+## 接入 trim-media（service-setup 固定地址版）
 
-编辑 `/var/apps/trim.media/cmd/service-setup`，把选源逻辑删掉，**无条件**写死：
+编辑 `/var/apps/trim.media/cmd/service-setup`，把选源逻辑删掉，**无条件**指向自定义源：
 
 ```bash
 # ===== 自定义刮削数据源（tmdb_provider，:38080）=====
-# 写死接入自定义代理，不做健康检测；provider 自身常驻保活。
+# 固定接入自定义代理，不做健康检测；provider 自身常驻保活。
 CUSTOM_SRC_BASE="http://127.0.0.1:38080"
 ITEM_OPT="--item=${CUSTOM_SRC_BASE}"
 SUBTITLE_OPT="--subtitle=${CUSTOM_SRC_BASE}"
 ```
 
 - 生效时机：trim-media 下次启动/重启（当前参数不变就不用立刻动）。
-- 代价：写死后不再自动回退飞牛默认源——**provider 不在，刮削就全部失败**，
+- 代价：固定指向后不再自动回退飞牛默认源——**provider 不在，刮削就全部失败**，
   所以请确保 provider 常驻（Docker `restart: unless-stopped`）。
 - 飞牛应用升级可能覆盖此文件：重新拷回即可（内容就上面 4 行核心）。
 
@@ -121,5 +121,3 @@ curl -s -X POST http://127.0.0.1:38080/meta/diff \
   `/detail/movie` 详情、`/meta/diff` 电影差量均已支持；手动搜索候选含电影。
 - 人物详情（`/detail/person`）未实现，返回空数据。
 - `GET /match` 返回 404 与飞牛原服务行为一致，**不是故障**。
-- 镜像不含 ffmpeg（省约 450MB）：`/meta/images` 候选海报的相似去重随之禁用（近重复图不再
-  合并，其余不受影响），启动日志会提示；宿主机装有 ffmpeg 时直跑自动启用。
