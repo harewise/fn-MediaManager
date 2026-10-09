@@ -44,7 +44,32 @@ curl -s http://127.0.0.1:38080/healthz      # {"code":0,...} 即正常
 | — | `tmdb_base` / `img_base` | TMDB 官方 | API/图片源地址，仅配置文件可改，一般不用动 |
 | — | `img_original_size` | `false` | `true` 时图片代理不降尺寸，始终取原图 |
 
-## 接入 trim-media（service-setup 固定地址版）
+## 接入 trim-media（把刮削源固定指向自建 provider）
+
+一键脚本（推荐，仓库根目录）：
+
+```bash
+sudo bash attach-trim-source.sh        # 写配置 + 重启 + 校验；任一步失败自动回滚
+```
+
+| 参数 / 环境变量 | 说明 |
+|---|---|
+| `--item-only` | 只接刮削源，不动字幕源（`--subtitle`） |
+| `--no-restart` | 只写配置，不重启（下次启动生效） |
+| `--force` | provider 健康检查失败也继续 |
+| `TRIM_SRC_BASE` | 覆盖源地址，默认 `http://127.0.0.1:38080` |
+
+脚本做的事：① 探测 provider `/healthz`，不健康就拒绝写入（避免把 trim 指到死源上、刮削全挂）；
+② 备份 `service-setup`；③ 写入 `CUSTOM_SRC_BASE` / `ITEM_OPT` / `SUBTITLE_OPT`，并把
+`${ITEM_OPT} ${SUBTITLE_OPT}` 补进 `SERVICE_COMMAND[0]`；④ 带 `TRIM_*` 环境变量重启 trim-media；
+⑤ 校验 8005 端口与进程参数，失败自动回滚并重新拉起。
+
+- **飞牛影视 App 每次升级都会重置** `/var/apps/trim.media/cmd/service-setup`，自定义源配置随之丢失、
+  trim 静默回落到默认源（表现为同一部剧新旧条目前缀/数据不一致，或动漫匹配错乱）。升级后重跑本脚本即可。
+- 代价：固定指向后不再自动回退默认源——**provider 不在，刮削就全部失败**，
+  请确保 provider 常驻（Docker `restart: unless-stopped`）。
+
+手动方式（等价，脚本跑不了时用）：
 
 编辑 `/var/apps/trim.media/cmd/service-setup`，把选源逻辑删掉，**无条件**指向自定义源：
 
@@ -56,10 +81,8 @@ ITEM_OPT="--item=${CUSTOM_SRC_BASE}"
 SUBTITLE_OPT="--subtitle=${CUSTOM_SRC_BASE}"
 ```
 
-- 生效时机：trim-media 下次启动/重启（当前参数不变就不用立刻动）。
-- 代价：固定指向后不再自动回退飞牛默认源——**provider 不在，刮削就全部失败**，
-  所以请确保 provider 常驻（Docker `restart: unless-stopped`）。
-- 飞牛应用升级可能覆盖此文件：重新拷回即可（内容就上面 4 行核心）。
+注意：新版 App 里这两行是注释掉的，且 `SERVICE_COMMAND[0]` 也不再引用它们——**只放开注释没用**，
+必须把 `${ITEM_OPT} ${SUBTITLE_OPT}` 补进 `SERVICE_COMMAND[0]` 的引号内。
 
 重启 trim-media（必须带 TRIM_* 环境变量，应用中心就是这样调用的）：
 
@@ -109,6 +132,7 @@ curl -s -X POST http://127.0.0.1:38080/meta/diff \
 |---|---|
 | `tmdb_provider.py` | 全部源码（单文件） |
 | `Dockerfile` / `docker-compose.yml` | 生产部署 |
+| `attach-trim-source.sh` | 一键把飞牛影视指回自定义源（写配置/重启/校验/回滚，见「接入 trim-media」） |
 | `docker-compose.debug.yml` / `dev.sh` | 调试环境（38081，与生产互不影响） |
 | `tests/` | 离线单测 + TMDB fixture（录制/回放，见 `tests/record_fixtures.py`） |
 | `docs/` | 飞牛影视接口协议 |
